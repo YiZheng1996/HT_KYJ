@@ -55,6 +55,7 @@ namespace MainUI
             btnMainData = new UISymbolButton();
             PanelHmi = new UIPanel();
             label5 = new AntdUI.Label();
+            tslblFrequency = new ToolStripStatusLabel();
             panel1.SuspendLayout();
             lblTitle.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picRunStatus).BeginInit();
@@ -223,10 +224,10 @@ namespace MainUI
             // 
             statusStrip1.BackColor = Color.FromArgb(227, 200, 227);
             statusStrip1.Font = new Font("思源黑体 CN Bold", 9F, FontStyle.Bold);
-            statusStrip1.Items.AddRange(new ToolStripItem[] { tslblUser, tslblPLC });
-            statusStrip1.Location = new Point(0, 1010);
+            statusStrip1.Items.AddRange(new ToolStripItem[] { tslblUser, tslblPLC, tslblFrequency });
+            statusStrip1.Location = new Point(0, 1009);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(1920, 22);
+            statusStrip1.Size = new Size(1920, 23);
             statusStrip1.TabIndex = 4;
             statusStrip1.Text = "statusStrip1";
             // 
@@ -235,7 +236,7 @@ namespace MainUI
             tslblUser.Font = new Font("微软雅黑", 9F, FontStyle.Bold, GraphicsUnit.Point, 134);
             tslblUser.ForeColor = Color.FromArgb(64, 64, 64);
             tslblUser.Name = "tslblUser";
-            tslblUser.Size = new Size(56, 17);
+            tslblUser.Size = new Size(56, 18);
             tslblUser.Text = "用户名称";
             // 
             // tslblPLC
@@ -243,7 +244,7 @@ namespace MainUI
             tslblPLC.Font = new Font("微软雅黑", 9F, FontStyle.Bold, GraphicsUnit.Point, 134);
             tslblPLC.ForeColor = Color.FromArgb(64, 64, 64);
             tslblPLC.Name = "tslblPLC";
-            tslblPLC.Size = new Size(55, 17);
+            tslblPLC.Size = new Size(55, 18);
             tslblPLC.Text = "PLC状态";
             tslblPLC.Visible = false;
             // 
@@ -571,11 +572,17 @@ namespace MainUI
             // 
             label5.BackColor = Color.FromArgb(65, 100, 204);
             label5.Dock = DockStyle.Bottom;
-            label5.Location = new Point(0, 1006);
+            label5.Location = new Point(0, 1005);
             label5.Name = "label5";
             label5.Size = new Size(1920, 4);
             label5.TabIndex = 496;
             label5.Text = "";
+            // 
+            // tslblFrequency
+            // 
+            tslblFrequency.Name = "tslblFrequency";
+            tslblFrequency.Size = new Size(80, 18);
+            tslblFrequency.Text = "调频电源状态";
             // 
             // frmMainMenu
             // 
@@ -634,5 +641,6 @@ namespace MainUI
         private UISymbolButton btnErrStatistics;
         private UISymbolButton btnDeviceDetection;
         private UISymbolButton btnAboutDevice;
+        private ToolStripStatusLabel tslblFrequency;
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace MainUI
+﻿namespace MainUI.PowerSupplyControl
 {
     partial class frmPowerSupplyForm
     {

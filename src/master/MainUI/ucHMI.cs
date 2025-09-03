@@ -1,5 +1,7 @@
 ﻿using AntdUI;
+using MainUI.PowerSupplyControl;
 using MainUI.Service;
+using System.IO.Ports;
 using Label = System.Windows.Forms.Label;
 using Timer = System.Windows.Forms.Timer;
 
@@ -27,7 +29,6 @@ namespace MainUI
         private readonly CountdownService _countdownService;
 
         #endregion
-
         public UcHMI()
         {
             InitializeComponent();
@@ -47,36 +48,26 @@ namespace MainUI
         {
             try
             {
-                InitializeOPC();  //初始化OPC连接和组
-                InitializeControls();  //初始化控件和数据
-                RegisterOPCHandlers();  //注册OPC组事件处理程序
-                RegisterTestEventHandlers();  //注册测试状态和提示事件处理程序
-                SetInitialState();  //设置初始状态
-                //InitializePermissions(); //初始化权限
+                // 1. 初始化OPC连接和组 - 与PLC通信基础
+                InitializeOPC();
+                // 2. 初始化界面控件和数据绑定
+                InitializeControls();
+                // 3. 注册OPC组事件处理程序 - 处理PLC数据变化
+                RegisterOPCHandlers();
+                // 4. 注册测试状态和提示事件处理程序
+                RegisterTestEventHandlers();
+                // 5. 设置控件初始状态和默认值
+                SetInitialState();
+                // 6. 初始化电源监控系统
+                InitializePowerSupply();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                NlogHelper.Default.Error($"HMI系统初始化失败: {ex.Message}");
+                MessageBox.Show($"HMI系统初始化失败:{ex.Message}", "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        /// <summary>
-        /// 初始化权限
-        /// </summary>
-        private void InitializePermissions()
-        {
-            try
-            {
-                var currentUser = NewUsers.NewUserInfo;
-                PermissionHelper.Initialize(currentUser.ID, currentUser.Role_ID);
-                PermissionHelper.ApplyPermissionToControl(this, currentUser.ID);
-            }
-            catch (Exception ex)
-            {
-                NlogHelper.Default.Error($"初始化权限失败：{ex.Message}");
-                throw;
-            }
-        }
 
         // 初始化OPC连接和组
         private void InitializeOPC()
@@ -485,7 +476,7 @@ namespace MainUI
 
                 if (!ConfirmSaveReport()) return;  // 提示确认
 
-                 saveFilePath = _reportService.BuildSaveFilePath(VarHelper.TestViewModel.ModelName); // 保存路径
+                saveFilePath = _reportService.BuildSaveFilePath(VarHelper.TestViewModel.ModelName); // 保存路径
 
                 _reportService.SaveTestRecord(saveFilePath, new TestRecordModel
                 {
@@ -614,6 +605,495 @@ namespace MainUI
         }
 
 
+        #endregion
+
+        #region 电源控制公开接口方法
+        /// <summary>
+        /// 连接指定串口的电源设备
+        /// 关闭现有连接后创建新的连接，成功后启动数据刷新
+        /// </summary>
+        /// <param name="comPort">串口号，如COM1、COM2等</param>
+        /// <returns>连接是否成功</returns>
+        public bool ConnectPowerSupply(string comPort)
+        {
+            try
+            {
+                NlogHelper.Default.Info($"尝试连接电源设备，串口: {comPort}");
+
+                // 如果已有连接，先释放现有资源
+                if (_powerSupply != null)
+                {
+                    _powerTimer.Stop();  // 停止数据刷新
+                    _powerSupply.Close(); // 关闭串口
+                    _powerSupply.Dispose(); // 释放资源
+                    _powerSupply = null;
+                }
+
+                // 创建新的电源协议实例，配置串口参数
+                _powerSupply = new PowerSupplyProtocol(comPort, 9600);
+                _powerSupply.Open(); // 打开串口连接
+
+                // 更新连接状态和当前串口信息
+                _powerConnected = true;
+                _currentComPort = comPort;
+
+                // 启动数据刷新定时器
+                _powerTimer.Start();
+
+                NlogHelper.Default.Info($"电源设备连接成功: {comPort}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // 连接失败时确保状态正确
+                _powerConnected = false;
+                _currentComPort = "";
+                _currentPowerData.IsConnected = false;
+
+                NlogHelper.Default.Error($"电源设备连接失败: {comPort}, 错误: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 断开电源设备连接
+        /// 停止数据刷新，关闭串口，释放所有相关资源
+        /// </summary>
+        public void DisconnectPowerSupply()
+        {
+            try
+            {
+                NlogHelper.Default.Info("断开电源设备连接");
+
+                // 停止数据刷新定时器
+                _powerTimer?.Stop();
+
+                // 关闭并释放串口资源
+                if (_powerSupply != null)
+                {
+                    _powerSupply.Close();
+                    _powerSupply.Dispose();
+                    _powerSupply = null;
+                }
+
+                // 更新连接状态
+                _powerConnected = false;
+                _currentComPort = "";
+                _currentPowerData.IsConnected = false;
+
+                NlogHelper.Default.Info("电源设备连接已断开");
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error($"断开电源设备连接时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 获取当前电源数据的副本
+        /// 返回最新读取到的所有电源参数，包括电压、电流、功率、频率等
+        /// </summary>
+        /// <returns>电源数据对象，如果未连接则IsConnected为false</returns>
+        public PowerSupplyData GetPowerData()
+        {
+            // 返回当前数据的副本，避免外部修改影响内部状态
+            return _currentPowerData ?? new PowerSupplyData { IsConnected = false };
+        }
+
+        /// <summary>
+        /// 获取电源设备连接状态
+        /// </summary>
+        /// <returns>true表示已连接且可正常通信，false表示未连接或通信异常</returns>
+        public bool IsPowerConnected => _powerConnected;
+
+        /// <summary>
+        /// 获取当前连接的串口号
+        /// </summary>
+        /// <returns>串口号字符串，如COM1；未连接时返回空字符串</returns>
+        public string GetCurrentComPort() => _currentComPort;
+
+        /// <summary>
+        /// 设置电源控制模式
+        /// </summary>
+        /// <param name="isRemote">true为电脑控制模式，false为本机控制模式</param>
+        /// <returns>设置是否成功</returns>
+        public bool SetControlMode(bool isRemote)
+        {
+            if (!_powerConnected)
+            {
+                NlogHelper.Default.Warn("电源未连接，无法设置控制模式");
+                return false;
+            }
+
+            try
+            {
+                var mode = isRemote ? PowerSupplyProtocol.ControlMode.Remote : PowerSupplyProtocol.ControlMode.Local;
+                bool result = _powerSupply.SetControlMode(mode);
+
+                string modeText = isRemote ? "电脑控制" : "本机控制";
+                NlogHelper.Default.Info($"设置控制模式为{modeText}: {(result ? "成功" : "失败")}");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error($"设置控制模式失败: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 设置电源输出档位
+        /// </summary>
+        /// <param name="isLow">true为低档(0-150V/42A)，false为高档(0-300V/21A)</param>
+        /// <returns>设置是否成功</returns>
+        public bool SetOutputRange(bool isLow)
+        {
+            if (!_powerConnected)
+            {
+                NlogHelper.Default.Warn("电源未连接，无法设置输出档位");
+                return false;
+            }
+
+            try
+            {
+                var range = isLow ? PowerSupplyProtocol.OutputRange.Low : PowerSupplyProtocol.OutputRange.High;
+                bool result = _powerSupply.SetOutputRange(range);
+
+                string rangeText = isLow ? "低档(0-150V/42A)" : "高档(0-300V/21A)";
+                NlogHelper.Default.Info($"设置输出档位为{rangeText}: {(result ? "成功" : "失败")}");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error($"设置输出档位失败: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 设置电源输出电压
+        /// </summary>
+        /// <param name="voltage">目标电压值</param>
+        /// <param name="isLowRange">是否为低档模式，影响电压设置范围</param>
+        /// <returns>设置是否成功</returns>
+        public bool SetVoltage(double voltage, bool isLowRange = true)
+        {
+            if (!_powerConnected)
+            {
+                NlogHelper.Default.Warn("电源未连接，无法设置电压");
+                return false;
+            }
+
+            try
+            {
+                var range = isLowRange ? PowerSupplyProtocol.OutputRange.Low : PowerSupplyProtocol.OutputRange.High;
+                bool result = _powerSupply.SetVoltage(voltage, range);
+
+                string rangeText = isLowRange ? "低档" : "高档";
+                NlogHelper.Default.Info($"设置电压为{voltage}V({rangeText}): {(result ? "成功" : "失败")}");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error($"设置电压失败: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 设置电源输出频率
+        /// </summary>
+        /// <param name="frequency">目标频率值，有效范围40-70Hz</param>
+        /// <returns>设置是否成功</returns>
+        public bool SetFrequency(double frequency)
+        {
+            if (!_powerConnected)
+            {
+                NlogHelper.Default.Warn("电源未连接，无法设置频率");
+                return false;
+            }
+
+            try
+            {
+                bool result = _powerSupply.SetFrequency(frequency);
+                NlogHelper.Default.Info($"设置频率为{frequency}Hz: {(result ? "成功" : "失败")}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error($"设置频率失败: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 执行电源复位操作
+        /// 用于清除电源设备的故障状态或重置设备
+        /// </summary>
+        /// <returns>复位是否成功</returns>
+        public bool ResetPowerSupply()
+        {
+            if (!_powerConnected)
+            {
+                NlogHelper.Default.Warn("电源未连接，无法执行复位操作");
+                return false;
+            }
+            try
+            {
+                bool result = _powerSupply.PowerReset();
+                NlogHelper.Default.Info($"电源复位操作: {(result ? "成功" : "失败")}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error($"电源复位操作失败: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 显示电源控制弹窗对话框
+        /// 提供完整的电源监控和控制界面
+        /// </summary>
+        public void ShowPowerControlDialog()
+        {
+            try
+            {
+                using var dialog = new frmPowerSupplyForm(this);
+                // 使用项目统一的弹窗显示方法，支持遮罩效果
+                VarHelper.ShowDialogWithOverlay(FindForm(), dialog);
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error($"显示电源控制对话框失败: {ex.Message}");
+                MessageBox.Show($"打开电源控制面板失败: {ex.Message}",
+                    "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 获取系统中所有可用的串口列表
+        /// 用于用户选择连接的串口
+        /// </summary>
+        /// <returns>可用串口名称数组</returns>
+        public string[] GetAvailableComPorts()
+        {
+            try
+            {
+                return SerialPort.GetPortNames();
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error($"获取可用串口列表失败: {ex.Message}");
+                return new string[0]; // 返回空数组而不是null
+            }
+        }
+        #endregion
+
+        #region 电源监控相关变量
+        /// <summary>
+        /// 电源通信协议实例，负责与调频电源设备进行串口通信
+        /// </summary>
+        private PowerSupplyProtocol _powerSupply;
+
+        /// <summary>
+        /// 当前电源数据缓存，存储最新读取到的所有电源参数
+        /// 包括三相电压、电流、功率、频率、故障状态等信息
+        /// </summary>
+        private PowerSupplyData _currentPowerData;
+
+        /// <summary>
+        /// 电源数据刷新定时器，定时读取电源设备的实时数据
+        /// 默认1000ms刷新间隔，避免通信频率过高导致设备响应异常
+        /// </summary>
+        private Timer _powerTimer;
+
+        /// <summary>
+        /// 电源连接状态标志，true表示已连接并可正常通信
+        /// 用于控制数据读取和命令发送的前置条件检查
+        /// </summary>
+        private bool _powerConnected = false;
+
+        /// <summary>
+        /// 当前使用的串口号，用于记录已连接的COM端口
+        /// 便于重连和状态显示
+        /// </summary>
+        private string _currentComPort = "";
+        #endregion
+
+        #region 调频电源相关
+
+        /// <summary>
+        /// 初始化电源监控
+        /// </summary>
+        private void InitializePowerSupply()
+        {
+            try
+            {
+                NlogHelper.Default.Info("开始初始化电源监控系统");
+
+                // 1. 初始化电源数据对象，设置默认状态为未连接
+                _currentPowerData = new PowerSupplyData
+                {
+                    IsConnected = false,
+                    UpdateTime = DateTime.Now,
+                    // 初始化所有数值为0，避免空值异常
+                    VoltageU = 0,
+                    VoltageV = 0,
+                    VoltageW = 0,
+                    CurrentU = 0,
+                    CurrentV = 0,
+                    CurrentW = 0,
+                    PowerU = 0,
+                    PowerV = 0,
+                    PowerW = 0,
+                    Frequency = 0,
+                    FaultStatus = PowerSupplyProtocol.FaultType.Normal
+                };
+
+                // 2. 创建并配置数据刷新定时器
+                _powerTimer = new Timer
+                {
+                    Interval = 1000,  // 1秒刷新间隔，平衡实时性和通信稳定性
+                    Enabled = false   // 初始状态禁用，连接成功后启动
+                };
+                _powerTimer.Tick += PowerTimer_Tick;  // 绑定定时器事件处理方法
+
+                // 3. 从INI配置文件读取串口号并尝试自动连接
+                string configuredComPort = GetPowerSupplyComPortFromConfig();
+
+                if (!string.IsNullOrEmpty(configuredComPort))
+                {
+                    NlogHelper.Default.Info($"从配置文件读取到电源串口号: {configuredComPort}");
+
+                    // 尝试连接配置的串口，失败不抛异常，记录日志即可
+                    bool connectResult = ConnectPowerSupply(configuredComPort);
+                    if (connectResult)
+                    {
+                        NlogHelper.Default.Info($"电源自动连接成功: {configuredComPort}");
+                    }
+                    else
+                    {
+                        NlogHelper.Default.Warn($"电源自动连接失败: {configuredComPort}，可稍后手动连接");
+                    }
+                }
+                else
+                {
+                    NlogHelper.Default.Info("未配置电源串口号，跳过自动连接");
+                }
+                NlogHelper.Default.Info("电源监控系统初始化完成");
+            }
+            catch (Exception ex)
+            {
+                // 电源初始化失败不应影响整个HMI系统启动，只记录错误
+                NlogHelper.Default.Error($"电源监控系统初始化失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 从INI配置文件读取电源串口号
+        /// </summary>
+        /// <returns>配置的串口号，如COM1、COM2等；如果未配置则返回空字符串</returns>
+        private string GetPowerSupplyComPortFromConfig()
+        {
+            try
+            {
+                string comPort = "";
+                return comPort;
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error($"读取电源串口配置失败: {ex.Message}");
+                return "";  // 当前返回空字符串，表示未配置
+            }
+        }
+
+        /// <summary>
+        /// 电源数据刷新定时器事件处理方法
+        /// 定时读取电源设备的实时数据，更新内存中的数据缓存
+        /// 采用停止-执行-启动的模式防止定时器重叠执行
+        /// </summary>
+        /// <param name="sender">定时器对象</param>
+        /// <param name="e">事件参数</param>
+        private void PowerTimer_Tick(object sender, EventArgs e)
+        {
+            // 检查连接状态和电源协议对象是否有效
+            if (!_powerConnected || _powerSupply == null)
+            {
+                return;
+            }
+
+            // 暂停定时器，防止数据读取过程中定时器再次触发
+            _powerTimer.Stop();
+
+            try
+            {
+                // 执行电源数据读取操作
+                ReadPowerData();
+            }
+            catch (Exception ex)
+            {
+                // 数据读取异常通常表示通信中断，标记为断开状态
+                NlogHelper.Default.Error($"电源数据读取失败: {ex.Message}");
+                _powerConnected = false;
+                _currentPowerData.IsConnected = false;
+            }
+            finally
+            {
+                // 如果仍保持连接状态，重新启动定时器继续数据刷新
+                if (_powerConnected)
+                {
+                    _powerTimer.Start();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 读取电源设备的所有实时数据
+        /// 按顺序读取三相电压、电流、功率、频率和故障状态
+        /// 采用同步串行读取方式，避免并发访问串口导致的通信冲突
+        /// </summary>
+        private void ReadPowerData()
+        {
+            try
+            {
+                // 读取三相电压数据 (U、V、W三相)
+                _currentPowerData.VoltageU = _powerSupply.ReadVoltage(PowerSupplyProtocol.Phase.U);
+                _currentPowerData.VoltageV = _powerSupply.ReadVoltage(PowerSupplyProtocol.Phase.V);
+                _currentPowerData.VoltageW = _powerSupply.ReadVoltage(PowerSupplyProtocol.Phase.W);
+
+                // 读取三相电流数据
+                _currentPowerData.CurrentU = _powerSupply.ReadCurrent(PowerSupplyProtocol.Phase.U);
+                _currentPowerData.CurrentV = _powerSupply.ReadCurrent(PowerSupplyProtocol.Phase.V);
+                _currentPowerData.CurrentW = _powerSupply.ReadCurrent(PowerSupplyProtocol.Phase.W);
+
+                // 读取三相功率数据
+                _currentPowerData.PowerU = _powerSupply.ReadPower(PowerSupplyProtocol.Phase.U);
+                _currentPowerData.PowerV = _powerSupply.ReadPower(PowerSupplyProtocol.Phase.V);
+                _currentPowerData.PowerW = _powerSupply.ReadPower(PowerSupplyProtocol.Phase.W);
+
+                // 读取输出频率
+                _currentPowerData.Frequency = _powerSupply.ReadFrequency();
+
+                // 查询故障状态
+                _currentPowerData.FaultStatus = _powerSupply.QueryFaultStatus();
+
+                // 更新数据时间戳和连接状态
+                _currentPowerData.UpdateTime = DateTime.Now;
+                _currentPowerData.IsConnected = true;
+
+                // 记录数据读取成功信息（可选，仅用于调试）
+                // NlogHelper.Default.Debug($"电源数据读取成功 - 频率:{_currentPowerData.Frequency:F1}Hz, 总功率:{_currentPowerData.TotalPower:F0}W");
+            }
+            catch (Exception ex)
+            {
+                // 重新抛出异常，由上层处理连接状态更新
+                throw new InvalidOperationException($"电源数据读取过程中发生错误: {ex.Message}", ex);
+            }
+        }
         #endregion
     }
 }

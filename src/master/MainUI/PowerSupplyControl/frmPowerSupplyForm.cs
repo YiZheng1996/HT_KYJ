@@ -1,19 +1,21 @@
 ﻿using System.IO.Ports;
-using static MainUI.CurrencyHelper.PowerSupplyProtocol;
+using static MainUI.PowerSupplyControl.PowerSupplyProtocol;
 using Timer = System.Windows.Forms.Timer;
 
-namespace MainUI
+namespace MainUI.PowerSupplyControl
 {
     public partial class frmPowerSupplyForm : Form
     {
+        private readonly UcHMI _hmi;
         private PowerSupplyProtocol powerSupply;
         private Timer refreshTimer;
         private PowerSupplyData currentData;
         private bool isConnected = false;
 
-        public frmPowerSupplyForm()
+        public frmPowerSupplyForm(UcHMI hmi)
         {
             InitializeComponent();
+            _hmi = hmi;
             InitializeData();
             SetupTimer();
             LoadComPorts();

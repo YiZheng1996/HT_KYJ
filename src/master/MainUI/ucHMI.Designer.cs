@@ -17,6 +17,34 @@ namespace MainUI
         /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
         protected override void Dispose(bool disposing)
         {
+            if (disposing)
+            {
+                try
+                {
+                    // 停止并释放电源数据刷新定时器
+                    if (_powerTimer != null)
+                    {
+                        _powerTimer.Stop();
+                        _powerTimer.Dispose();
+                        _powerTimer = null;
+                    }
+
+                    // 关闭并释放电源串口连接
+                    if (_powerSupply != null)
+                    {
+                        _powerSupply.Close();
+                        _powerSupply.Dispose();
+                        _powerSupply = null;
+                    }
+
+                    NlogHelper.Default.Info("电源监控资源释放完成");
+                }
+                catch (Exception ex)
+                {
+                    NlogHelper.Default.Error($"释放电源监控资源时发生错误: {ex.Message}");
+                }
+            }
+
             if (disposing && (components != null))
             {
                 components.Dispose();
@@ -56,6 +84,10 @@ namespace MainUI
             tabs1 = new Tabs();
             tabPage3 = new AntdUI.TabPage();
             grpRainy = new UIPanel();
+            uiPanel11 = new UIPanel();
+            label10 = new AntdUI.Label();
+            uiLabel1 = new UILabel();
+            uiLabel4 = new UILabel();
             uiPanel6 = new UIPanel();
             minus = new PictureBox();
             LabelNumber = new UIDigitalLabel();
@@ -112,15 +144,12 @@ namespace MainUI
             txtModel = new UITextBox();
             txtNumber = new UITextBox();
             alert = new Alert();
-            uiPanel11 = new UIPanel();
-            label10 = new AntdUI.Label();
-            uiLabel1 = new UILabel();
-            uiLabel4 = new UILabel();
             uiTitlePanel3.SuspendLayout();
             uiTitlePanel8.SuspendLayout();
             tabs1.SuspendLayout();
             tabPage3.SuspendLayout();
             grpRainy.SuspendLayout();
+            uiPanel11.SuspendLayout();
             uiPanel6.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)minus).BeginInit();
             ((System.ComponentModel.ISupportInitialize)plus).BeginInit();
@@ -136,7 +165,6 @@ namespace MainUI
             panelChart.SuspendLayout();
             uiTitlePanel4.SuspendLayout();
             panelHand.SuspendLayout();
-            uiPanel11.SuspendLayout();
             SuspendLayout();
             // 
             // uiTitlePanel3
@@ -636,6 +664,64 @@ namespace MainUI
             grpRainy.TabIndex = 521;
             grpRainy.Text = null;
             grpRainy.TextAlignment = ContentAlignment.MiddleCenter;
+            // 
+            // uiPanel11
+            // 
+            uiPanel11.BackColor = Color.Transparent;
+            uiPanel11.Controls.Add(label10);
+            uiPanel11.Controls.Add(uiLabel1);
+            uiPanel11.Controls.Add(uiLabel4);
+            uiPanel11.FillColor = Color.White;
+            uiPanel11.FillColor2 = Color.White;
+            uiPanel11.FillDisableColor = Color.White;
+            uiPanel11.Font = new Font("宋体", 12F, FontStyle.Regular, GraphicsUnit.Point, 134);
+            uiPanel11.ForeColor = Color.Black;
+            uiPanel11.ForeDisableColor = Color.Black;
+            uiPanel11.Location = new Point(4, 787);
+            uiPanel11.Margin = new Padding(4, 5, 4, 5);
+            uiPanel11.MinimumSize = new Size(1, 1);
+            uiPanel11.Name = "uiPanel11";
+            uiPanel11.Radius = 30;
+            uiPanel11.RectSides = ToolStripStatusLabelBorderSides.None;
+            uiPanel11.Size = new Size(181, 105);
+            uiPanel11.TabIndex = 523;
+            uiPanel11.Text = null;
+            uiPanel11.TextAlignment = ContentAlignment.MiddleCenter;
+            // 
+            // label10
+            // 
+            label10.BackColor = Color.FromArgb(64, 64, 64);
+            label10.ForeColor = Color.FromArgb(141, 145, 145);
+            label10.Location = new Point(6, 71);
+            label10.Name = "label10";
+            label10.Size = new Size(170, 2);
+            label10.TabIndex = 495;
+            label10.Text = "";
+            // 
+            // uiLabel1
+            // 
+            uiLabel1.AutoSize = true;
+            uiLabel1.BackColor = Color.Transparent;
+            uiLabel1.Font = new Font("宋体", 13F);
+            uiLabel1.ForeColor = Color.FromArgb(64, 64, 64);
+            uiLabel1.Location = new Point(4, 79);
+            uiLabel1.Name = "uiLabel1";
+            uiLabel1.Size = new Size(152, 18);
+            uiLabel1.TabIndex = 496;
+            uiLabel1.Text = "空气温度检测(℃)";
+            // 
+            // uiLabel4
+            // 
+            uiLabel4.BackColor = Color.Transparent;
+            uiLabel4.Font = new Font("宋体", 35F);
+            uiLabel4.ForeColor = Color.FromArgb(64, 64, 64);
+            uiLabel4.Location = new Point(2, 8);
+            uiLabel4.Name = "uiLabel4";
+            uiLabel4.Size = new Size(179, 62);
+            uiLabel4.TabIndex = 0;
+            uiLabel4.Tag = "1";
+            uiLabel4.Text = "1000.0";
+            uiLabel4.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // uiPanel6
             // 
@@ -1495,64 +1581,6 @@ namespace MainUI
             alert.Text = "产品型号";
             alert.Visible = false;
             // 
-            // uiPanel11
-            // 
-            uiPanel11.BackColor = Color.Transparent;
-            uiPanel11.Controls.Add(label10);
-            uiPanel11.Controls.Add(uiLabel1);
-            uiPanel11.Controls.Add(uiLabel4);
-            uiPanel11.FillColor = Color.White;
-            uiPanel11.FillColor2 = Color.White;
-            uiPanel11.FillDisableColor = Color.White;
-            uiPanel11.Font = new Font("宋体", 12F, FontStyle.Regular, GraphicsUnit.Point, 134);
-            uiPanel11.ForeColor = Color.Black;
-            uiPanel11.ForeDisableColor = Color.Black;
-            uiPanel11.Location = new Point(4, 787);
-            uiPanel11.Margin = new Padding(4, 5, 4, 5);
-            uiPanel11.MinimumSize = new Size(1, 1);
-            uiPanel11.Name = "uiPanel11";
-            uiPanel11.Radius = 30;
-            uiPanel11.RectSides = ToolStripStatusLabelBorderSides.None;
-            uiPanel11.Size = new Size(181, 105);
-            uiPanel11.TabIndex = 523;
-            uiPanel11.Text = null;
-            uiPanel11.TextAlignment = ContentAlignment.MiddleCenter;
-            // 
-            // label10
-            // 
-            label10.BackColor = Color.FromArgb(64, 64, 64);
-            label10.ForeColor = Color.FromArgb(141, 145, 145);
-            label10.Location = new Point(6, 71);
-            label10.Name = "label10";
-            label10.Size = new Size(170, 2);
-            label10.TabIndex = 495;
-            label10.Text = "";
-            // 
-            // uiLabel1
-            // 
-            uiLabel1.AutoSize = true;
-            uiLabel1.BackColor = Color.Transparent;
-            uiLabel1.Font = new Font("宋体", 13F);
-            uiLabel1.ForeColor = Color.FromArgb(64, 64, 64);
-            uiLabel1.Location = new Point(4, 79);
-            uiLabel1.Name = "uiLabel1";
-            uiLabel1.Size = new Size(152, 18);
-            uiLabel1.TabIndex = 496;
-            uiLabel1.Text = "空气温度检测(℃)";
-            // 
-            // uiLabel4
-            // 
-            uiLabel4.BackColor = Color.Transparent;
-            uiLabel4.Font = new Font("宋体", 35F);
-            uiLabel4.ForeColor = Color.FromArgb(64, 64, 64);
-            uiLabel4.Location = new Point(2, 8);
-            uiLabel4.Name = "uiLabel4";
-            uiLabel4.Size = new Size(179, 62);
-            uiLabel4.TabIndex = 0;
-            uiLabel4.Tag = "1";
-            uiLabel4.Text = "1000.0";
-            uiLabel4.TextAlign = ContentAlignment.MiddleCenter;
-            // 
             // UcHMI
             // 
             AutoScaleMode = AutoScaleMode.None;
@@ -1571,6 +1599,8 @@ namespace MainUI
             tabs1.ResumeLayout(false);
             tabPage3.ResumeLayout(false);
             grpRainy.ResumeLayout(false);
+            uiPanel11.ResumeLayout(false);
+            uiPanel11.PerformLayout();
             uiPanel6.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)minus).EndInit();
             ((System.ComponentModel.ISupportInitialize)plus).EndInit();
@@ -1594,8 +1624,6 @@ namespace MainUI
             panelChart.ResumeLayout(false);
             uiTitlePanel4.ResumeLayout(false);
             panelHand.ResumeLayout(false);
-            uiPanel11.ResumeLayout(false);
-            uiPanel11.PerformLayout();
             ResumeLayout(false);
         }
 

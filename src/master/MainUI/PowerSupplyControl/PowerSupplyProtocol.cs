@@ -1,7 +1,8 @@
-﻿using System.IO.Ports;
-using static MainUI.CurrencyHelper.PowerSupplyProtocol;
+﻿using System.ComponentModel;
+using System.IO.Ports;
+using static MainUI.PowerSupplyControl.PowerSupplyProtocol;
 
-namespace MainUI.CurrencyHelper
+namespace MainUI.PowerSupplyControl
 {
     // <summary>
     /// 调频电源RS485通讯协议类
@@ -70,9 +71,11 @@ namespace MainUI.CurrencyHelper
         /// <param name="baudRate">波特率，默认9600</param>
         public PowerSupplyProtocol(string portName, int baudRate = 9600)
         {
-            _serialPort = new SerialPort(portName, baudRate, Parity.None, 8, StopBits.One);
-            _serialPort.ReadTimeout = 1000;
-            _serialPort.WriteTimeout = 1000;
+            _serialPort = new SerialPort(portName, baudRate, Parity.None, 8, StopBits.One)
+            {
+                ReadTimeout = 1000,
+                WriteTimeout = 1000
+            };
         }
 
         /// <summary>
@@ -191,7 +194,7 @@ namespace MainUI.CurrencyHelper
                 catch (Exception ex)
                 {
                     // 记录详细错误信息
-                    Console.WriteLine($"通讯失败: {ex.Message}");
+                    NlogHelper.Default.Error($"通讯失败: {ex.Message}", ex);
                     throw;
                 }
             }
@@ -227,7 +230,7 @@ namespace MainUI.CurrencyHelper
             // 电压值转换为数据格式 (例: 150.0V -> 数据1=01, 数据2=05)
             int voltageInt = (int)(voltage * 10);
             byte data1 = (byte)(voltageInt / 1000);
-            byte data2 = (byte)((voltageInt % 1000) / 100);
+            byte data2 = (byte)(voltageInt % 1000 / 100);
 
             byte[] response = SendCommand(0x08, command, data1, data2, 0x00, 0x00);
             return response != null && response[2] == data1 && response[3] == data2;
@@ -375,7 +378,7 @@ namespace MainUI.CurrencyHelper
             Task.Run(() => ReadVoltage(Phase.U), cancellationToken),
             Task.Run(() => ReadVoltage(Phase.V), cancellationToken),
             Task.Run(() => ReadVoltage(Phase.W), cancellationToken)
-        };
+            };
 
             try
             {
@@ -398,7 +401,7 @@ namespace MainUI.CurrencyHelper
             Task.Run(() => ReadCurrent(Phase.U), cancellationToken),
             Task.Run(() => ReadCurrent(Phase.V), cancellationToken),
             Task.Run(() => ReadCurrent(Phase.W), cancellationToken)
-        };
+            };
 
             try
             {
@@ -421,7 +424,7 @@ namespace MainUI.CurrencyHelper
             Task.Run(() => ReadPower(Phase.U), cancellationToken),
             Task.Run(() => ReadPower(Phase.V), cancellationToken),
             Task.Run(() => ReadPower(Phase.W), cancellationToken)
-        };
+            };
 
             try
             {
@@ -465,20 +468,87 @@ namespace MainUI.CurrencyHelper
     /// </summary>
     public class PowerSupplyData
     {
+        /// <summary>
+        /// U相电压
+        /// </summary>
+        [DefaultValue(0.0)]
         public double VoltageU { get; set; }
+
+        /// <summary>
+        /// V相电压
+        /// </summary>
+        [DefaultValue(0.0)]
         public double VoltageV { get; set; }
+
+        /// <summary>
+        /// W相电压
+        /// </summary>
+        [DefaultValue(0.0)]
         public double VoltageW { get; set; }
+
+        /// <summary>
+        /// U相电流
+        /// </summary>
+        [DefaultValue(0.0)]
         public double CurrentU { get; set; }
+
+        /// <summary>
+        /// V相电流
+        /// </summary>
+        [DefaultValue(0.0)]
         public double CurrentV { get; set; }
+
+        /// <summary>
+        /// W相电流
+        /// </summary>
+        [DefaultValue(0.0)]
         public double CurrentW { get; set; }
+
+        /// <summary>
+        /// U相功率
+        /// </summary>
+        [DefaultValue(0.0)]
         public double PowerU { get; set; }
+
+        /// <summary>
+        /// V相功率
+        /// </summary>
+        [DefaultValue(0.0)]
         public double PowerV { get; set; }
+
+        /// <summary>
+        /// W相功率
+        /// </summary>
+        [DefaultValue(0.0)]
         public double PowerW { get; set; }
+
+        /// <summary>
+        /// 频率
+        /// </summary>
+        [DefaultValue(0.0)]
         public double Frequency { get; set; }
+
+        /// <summary>
+        /// 故障状态
+        /// </summary>
+        [DefaultValue(FaultType.Normal)]
         public FaultType FaultStatus { get; set; }
+
+        /// <summary>
+        /// 更新时间
+        /// </summary>
         public DateTime UpdateTime { get; set; }
 
+        /// <summary>
+        /// 总功率
+        /// </summary>
+        [DefaultValue(0.0)]
         public double TotalPower => PowerU + PowerV + PowerW;
+
+        /// <summary>
+        /// 是否连接
+        /// </summary>
+        [DefaultValue(false)]
         public bool IsConnected { get; set; }
     }
 }
