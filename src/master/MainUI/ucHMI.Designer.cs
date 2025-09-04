@@ -17,34 +17,6 @@ namespace MainUI
         /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                try
-                {
-                    // 停止并释放电源数据刷新定时器
-                    if (_powerTimer != null)
-                    {
-                        _powerTimer.Stop();
-                        _powerTimer.Dispose();
-                        _powerTimer = null;
-                    }
-
-                    // 关闭并释放电源串口连接
-                    if (_powerSupply != null)
-                    {
-                        _powerSupply.Close();
-                        _powerSupply.Dispose();
-                        _powerSupply = null;
-                    }
-
-                    NlogHelper.Default.Info("电源监控资源释放完成");
-                }
-                catch (Exception ex)
-                {
-                    NlogHelper.Default.Error($"释放电源监控资源时发生错误: {ex.Message}");
-                }
-            }
-
             if (disposing && (components != null))
             {
                 components.Dispose();
@@ -84,6 +56,7 @@ namespace MainUI
             tabs1 = new Tabs();
             tabPage3 = new AntdUI.TabPage();
             grpRainy = new UIPanel();
+            BtnFMPowerSupply = new UIButton();
             uiPanel11 = new UIPanel();
             label10 = new AntdUI.Label();
             uiLabel1 = new UILabel();
@@ -638,6 +611,7 @@ namespace MainUI
             // grpRainy
             // 
             grpRainy.BackColor = Color.FromArgb(236, 236, 237);
+            grpRainy.Controls.Add(BtnFMPowerSupply);
             grpRainy.Controls.Add(uiPanel11);
             grpRainy.Controls.Add(uiPanel6);
             grpRainy.Controls.Add(ucGrid1);
@@ -664,6 +638,26 @@ namespace MainUI
             grpRainy.TabIndex = 521;
             grpRainy.Text = null;
             grpRainy.TextAlignment = ContentAlignment.MiddleCenter;
+            // 
+            // BtnFMPowerSupply
+            // 
+            BtnFMPowerSupply.BackColor = Color.Transparent;
+            BtnFMPowerSupply.Cursor = Cursors.Hand;
+            BtnFMPowerSupply.FillDisableColor = Color.FromArgb(80, 160, 255);
+            BtnFMPowerSupply.Font = new Font("思源黑体 CN Bold", 12F, FontStyle.Bold);
+            BtnFMPowerSupply.ForeDisableColor = Color.White;
+            BtnFMPowerSupply.Location = new Point(210, 289);
+            BtnFMPowerSupply.MinimumSize = new Size(1, 1);
+            BtnFMPowerSupply.Name = "BtnFMPowerSupply";
+            BtnFMPowerSupply.Radius = 10;
+            BtnFMPowerSupply.RectDisableColor = Color.FromArgb(80, 160, 255);
+            BtnFMPowerSupply.ShowFocusLine = true;
+            BtnFMPowerSupply.Size = new Size(158, 35);
+            BtnFMPowerSupply.TabIndex = 524;
+            BtnFMPowerSupply.Text = "调频电源设置";
+            BtnFMPowerSupply.TipsFont = new Font("微软雅黑", 9F, FontStyle.Regular, GraphicsUnit.Point, 134);
+            BtnFMPowerSupply.TipsText = "1";
+            BtnFMPowerSupply.Click += BtnFMPowerSupply_Click;
             // 
             // uiPanel11
             // 
@@ -1710,5 +1704,6 @@ namespace MainUI
         private AntdUI.Label label10;
         private UILabel uiLabel1;
         private UILabel uiLabel4;
+        private UIButton BtnFMPowerSupply;
     }
 }

@@ -424,9 +424,9 @@ public partial class frmMainMenu : Form
         tslblUser.Text = $"当前登录用户： {userInfo.Username}  当前权限：{userInfo.Describe} ";
 
         // 更新PLC状态
-        tslblPLC.Text = _opcStatus.NoError ? " PLC连接正常 " : " PLC连接失败 ";
-        tslblPLC.BackColor = _opcStatus.NoError ? Color.FromArgb(110, 190, 40) : Color.Salmon;
-        if (_opcStatus.Simulated) tslblPLC.Text += " 仿真模式 ";
+        //tslblPLC.Text = _opcStatus.NoError ? " PLC连接正常 " : " PLC连接失败 ";
+        //tslblPLC.BackColor = _opcStatus.NoError ? Color.FromArgb(110, 190, 40) : Color.Salmon;
+        //if (_opcStatus.Simulated) tslblPLC.Text += " 仿真模式 ";
 
         tslblFrequency.Text= _hmi.IsPowerConnected ? " 调频电源连接正常 " : " 调频电源连接失败 ";
         tslblFrequency.BackColor = _hmi.IsPowerConnected ? Color.FromArgb(110, 190, 40) : Color.Salmon;

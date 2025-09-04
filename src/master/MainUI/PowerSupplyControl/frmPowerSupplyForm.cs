@@ -1,25 +1,177 @@
-﻿using System.IO.Ports;
-using static MainUI.PowerSupplyControl.PowerSupplyProtocol;
+﻿using static MainUI.PowerSupplyControl.PowerSupplyProtocol;
 using Timer = System.Windows.Forms.Timer;
 
 namespace MainUI.PowerSupplyControl
 {
-    public partial class frmPowerSupplyForm : Form
+    public partial class frmPowerSupplyForm : UIForm
     {
-        private readonly UcHMI _hmi;
-        private PowerSupplyProtocol powerSupply;
-        private Timer refreshTimer;
-        private PowerSupplyData currentData;
-        private bool isConnected = false;
+        #region 私有字段修改
+        /// <summary>
+        /// 电源服务实例，负责所有电源相关的操作
+        /// </summary>
+        private readonly PowerSupplyService _powerService;
 
-        public frmPowerSupplyForm(UcHMI hmi)
+        /// <summary>
+        /// 界面刷新定时器，定期更新UI显示
+        /// </summary>
+        private Timer refreshTimer;
+
+        /// <summary>
+        /// 当前显示的电源数据
+        /// </summary>
+        private PowerSupplyData currentData;
+        #endregion
+
+        /// <summary>
+        /// 接收电源服务实例
+        /// </summary>
+        /// <param name="powerService">电源服务实例</param>
+        public frmPowerSupplyForm(PowerSupplyService powerService)
         {
             InitializeComponent();
-            _hmi = hmi;
+
+            // 保存电源服务引用
+            _powerService = powerService ?? throw new ArgumentNullException(nameof(powerService));
+
+            // 初始化数据和UI
             InitializeData();
             SetupTimer();
-            LoadComPorts();
             SetupDefaultValues();
+
+            // 订阅电源服务事件
+            SubscribePowerServiceEvents();
+
+            // 初始化UI状态
+            UpdateConnectionUI();
+        }
+
+        #region 事件订阅和处理
+        /// <summary>
+        /// 订阅电源服务事件
+        /// </summary>
+        private void SubscribePowerServiceEvents()
+        {
+            _powerService.DataUpdated += OnPowerServiceDataUpdated;
+            _powerService.ConnectionStatusChanged += OnPowerServiceConnectionChanged;
+            _powerService.OperationCompleted += OnPowerServiceOperationCompleted;
+        }
+
+        /// <summary>
+        /// 取消订阅电源服务事件
+        /// </summary>
+        private void UnsubscribePowerServiceEvents()
+        {
+            _powerService.DataUpdated -= OnPowerServiceDataUpdated;
+            _powerService.ConnectionStatusChanged -= OnPowerServiceConnectionChanged;
+            _powerService.OperationCompleted -= OnPowerServiceOperationCompleted;
+        }
+
+        /// <summary>
+        /// 处理电源服务数据更新事件
+        /// </summary>
+        /// <param name="data">最新电源数据</param>
+        private void OnPowerServiceDataUpdated(PowerSupplyData data)
+        {
+            try
+            {
+                // 确保在UI线程中执行
+                if (InvokeRequired)
+                {
+                    Invoke(new Action<PowerSupplyData>(OnPowerServiceDataUpdated), data);
+                    return;
+                }
+
+                // 更新当前数据并刷新UI
+                currentData = data;
+                UpdateUI();
+            }
+            catch (Exception ex)
+            {
+                ShowMessage($"更新数据显示失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 处理电源服务连接状态变化事件
+        /// </summary>
+        /// <param name="isConnected">连接状态</param>
+        private void OnPowerServiceConnectionChanged(bool isConnected)
+        {
+            try
+            {
+                // 确保在UI线程中执行
+                if (InvokeRequired)
+                {
+                    Invoke(new Action<bool>(OnPowerServiceConnectionChanged), isConnected);
+                    return;
+                }
+
+                // 更新连接相关UI状态
+                UpdateConnectionUI();
+            }
+            catch (Exception ex)
+            {
+                ShowMessage($"更新连接状态显示失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 处理电源服务操作完成事件
+        /// </summary>
+        /// <param name="operation">操作描述</param>
+        /// <param name="success">操作结果</param>
+        private void OnPowerServiceOperationCompleted(string operation, bool success)
+        {
+            try
+            {
+                // 确保在UI线程中执行
+                if (InvokeRequired)
+                {
+                    Invoke(new Action<string, bool>(OnPowerServiceOperationCompleted), operation, success);
+                    return;
+                }
+
+                // 显示操作结果
+                ShowMessage($"{operation}: {(success ? "成功" : "失败")}");
+            }
+            catch (Exception ex)
+            {
+                // 避免在错误处理中再次显示消息框造成循环
+                System.Diagnostics.Debug.WriteLine($"显示操作结果失败: {ex.Message}");
+            }
+        }
+        #endregion
+
+        /// <summary>
+        /// 更新连接相关的UI状态
+        /// </summary>
+        private void UpdateConnectionUI()
+        {
+            try
+            {
+                bool isConnected = _powerService.IsConnected;
+                string currentPort = _powerService.CurrentComPort;
+
+                // 更新连接状态标签
+                if (isConnected)
+                {
+                    lblConnectionStatus.Text = $"已连接 - {currentPort}";
+                    lblConnectionStatus.ForeColor = Color.Green;
+                }
+                else
+                {
+                    lblConnectionStatus.Text = "未连接";
+                    lblConnectionStatus.ForeColor = Color.Red;
+                }
+
+                // 更新当前数据（如果有的话）
+                currentData = _powerService.CurrentData;
+                UpdateUI();
+            }
+            catch (Exception ex)
+            {
+                ShowMessage($"更新连接UI状态失败: {ex.Message}");
+            }
         }
 
         private void SetupDefaultValues()
@@ -29,14 +181,6 @@ namespace MainUI.PowerSupplyControl
             if (cmbOutputRange.Items.Count > 0) cmbOutputRange.SelectedIndex = 1; // 低档
         }
 
-        private void LoadComPorts()
-        {
-            // 加载可用串口
-            string[] ports = SerialPort.GetPortNames();
-            cmbComPort.Items.Clear();
-            cmbComPort.Items.AddRange(ports);
-            if (cmbComPort.Items.Count > 0) cmbComPort.SelectedIndex = 0;
-        }
 
         private void InitializeData()
         {
@@ -56,182 +200,22 @@ namespace MainUI.PowerSupplyControl
             refreshTimer.Tick += RefreshTimer_Tick;
         }
 
-        private async void RefreshTimer_Tick(object sender, EventArgs e)
+        /// <summary>
+        /// 界面刷新定时器事件处理
+        /// 现在主要用于定期更新UI显示，数据由服务事件提供
+        /// </summary>
+        private void RefreshTimer_Tick(object sender, EventArgs e)
         {
-            if (!isConnected || powerSupply == null) return;
-
-            // 防止重叠执行
-            refreshTimer.Enabled = false;
-
             try
             {
-                // 使用CancellationToken控制超时
-                using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(1500)); // 总超时1.5秒
-                // 分批异步读取数据，避免一次性读取太多导致卡死
-                var tasks = new List<Task>();
-
-                // 第一批：电压数据
-                var voltageTask = Task.Run(async () =>
-                {
-                    try
-                    {
-                        return await powerSupply.ReadAllVoltagesAsync(cts.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        return (0.0, 0.0, 0.0);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"读取电压失败: {ex.Message}");
-                        return (0.0, 0.0, 0.0);
-                    }
-                }, cts.Token);
-
-                // 第二批：电流数据  
-                var currentTask = Task.Run(async () =>
-                {
-                    try
-                    {
-                        return await powerSupply.ReadAllCurrentsAsync(cts.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        return (0.0, 0.0, 0.0);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"读取电流失败: {ex.Message}");
-                        return (0.0, 0.0, 0.0);
-                    }
-                }, cts.Token);
-
-                // 第三批：功率和频率
-                var powerTask = Task.Run(async () =>
-                {
-                    try
-                    {
-                        return await powerSupply.ReadAllPowersAsync(cts.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        return (0.0, 0.0, 0.0);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"读取功率失败: {ex.Message}");
-                        return (0.0, 0.0, 0.0);
-                    }
-                }, cts.Token);
-
-                var frequencyTask = Task.Run(async () =>
-                {
-                    try
-                    {
-                        return await powerSupply.ReadFrequencyAsync(cts.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        return 0.0;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"读取频率失败: {ex.Message}");
-                        return 0.0;
-                    }
-                }, cts.Token);
-
-                var faultTask = Task.Run(async () =>
-                {
-                    try
-                    {
-                        return await powerSupply.QueryFaultStatusAsync(cts.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        return FaultType.Normal;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"读取故障状态失败: {ex.Message}");
-                        return FaultType.Normal;
-                    }
-                }, cts.Token);
-
-                // 等待所有任务完成或超时
-                try
-                {
-                    await Task.WhenAll(voltageTask, currentTask, powerTask, frequencyTask, faultTask);
-
-                    // 更新数据
-                    (double voltagesU, double voltagesV, double voltagesW) = await voltageTask;
-                    (double currentsU, double currentsV, double currentsW) = await currentTask;
-                    (double powersU, double powersV, double powersW)  = await powerTask;
-                    var frequency = await frequencyTask;
-                    var faultStatus = await faultTask;
-
-                    currentData.VoltageU = voltagesU;
-                    currentData.VoltageV = voltagesV;
-                    currentData.VoltageW = voltagesW;
-                    currentData.CurrentU = currentsU;
-                    currentData.CurrentV = currentsV;
-                    currentData.CurrentW = currentsW;
-                    currentData.PowerU = powersU;
-                    currentData.PowerV = powersV;
-                    currentData.PowerW = powersW;
-                    currentData.Frequency = frequency;
-                    currentData.FaultStatus = faultStatus;
-                    currentData.UpdateTime = DateTime.Now;
-                    currentData.IsConnected = true;
-
-                    // 更新UI显示
-                    UpdateUI();
-                }
-                catch (OperationCanceledException)
-                {
-                    // 超时处理
-                    ShowMessage("数据读取超时");
-                    currentData.IsConnected = false;
-                }
+                // 从服务获取最新数据并更新UI
+                currentData = _powerService.CurrentData;
+                UpdateUI();
             }
             catch (Exception ex)
             {
-                // 通讯异常处理
-                currentData.IsConnected = false;
-                ShowMessage($"通讯异常: {ex.Message}");
-
-                // 考虑自动重连或暂停刷新
-                HandleCommunicationError();
-            }
-            finally
-            {
-                // 确保定时器重新启动
-                if (isConnected)
-                {
-                    refreshTimer.Enabled = true;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 处理通讯错误
-        /// </summary>
-        private void HandleCommunicationError()
-        {
-            // 连续失败计数
-            int failureCount = 0;
-            failureCount++;
-
-            if (failureCount >= 3) // 连续失败3次后暂停刷新
-            {
-                refreshTimer.Interval = 2000; // 延长刷新间隔到2秒
-                ShowMessage("检测到连续通讯失败，已降低刷新频率");
-            }
-
-            if (failureCount >= 10) // 连续失败10次后自动断开
-            {
-                ShowMessage("通讯持续失败，自动断开连接");
-                Disconnect();
+                // 定时器中的异常不应显示消息框，只记录日志
+                NlogHelper.Default.Error($"界面刷新定时器异常: {ex.Message}", ex);
             }
         }
 
@@ -273,10 +257,6 @@ namespace MainUI.PowerSupplyControl
             progressCurrentU.Value = Math.Min((int)currentData.CurrentU, progressCurrentU.Maximum);
             progressCurrentV.Value = Math.Min((int)currentData.CurrentV, progressCurrentV.Maximum);
             progressCurrentW.Value = Math.Min((int)currentData.CurrentW, progressCurrentW.Maximum);
-
-            // 更新连接状态
-            lblConnectionStatus.Text = currentData.IsConnected ? $"已连接 - {currentData.UpdateTime:HH:mm:ss}" : "连接断开";
-            lblConnectionStatus.ForeColor = currentData.IsConnected ? Color.Green : Color.Red;
         }
 
         private string GetFaultStatusText(FaultType faultType)
@@ -293,79 +273,13 @@ namespace MainUI.PowerSupplyControl
             };
         }
 
-        // 事件处理方法
-        private async void BtnConnect_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (cmbComPort.SelectedItem == null)
-                {
-                    ShowMessage("请选择串口");
-                    return;
-                }
-
-                // 禁用连接按钮防止重复点击
-                btnConnect.Enabled = false;
-                btnConnect.Text = "连接中...";
-
-                string portName = cmbComPort.SelectedItem.ToString();
-
-                // 异步初始化串口
-                await Task.Run(() =>
-                {
-                    powerSupply = new PowerSupplyProtocol(portName, 9600);
-                    powerSupply.Open();
-
-                    // 测试通讯是否正常
-                    var testResult = powerSupply.QueryFaultStatus();
-                });
-
-                isConnected = true;
-                btnConnect.Enabled = false;
-                btnConnect.Text = "连接";
-                btnDisconnect.Enabled = true;
-                cmbComPort.Enabled = false;
-
-                // 重置刷新间隔
-                refreshTimer.Interval = 1000;
-                refreshTimer.Start();
-                ShowMessage("连接成功");
-            }
-            catch (Exception ex)
-            {
-                btnConnect.Enabled = true;
-                btnConnect.Text = "连接";
-                ShowMessage($"连接失败: {ex.Message}");
-            }
-        }
-
-        private void BtnDisconnect_Click(object sender, EventArgs e)
-        {
-            Disconnect();
-        }
-
-        private void Disconnect()
-        {
-            refreshTimer.Stop();
-            isConnected = false;
-
-            powerSupply?.Close();
-            powerSupply?.Dispose();
-            powerSupply = null;
-
-            btnConnect.Enabled = true;
-            btnDisconnect.Enabled = false;
-            cmbComPort.Enabled = true;
-
-            currentData.IsConnected = false;
-            UpdateUI();
-
-            ShowMessage("已断开连接");
-        }
-
+        #region 设备控制事件处理
+        /// <summary>
+        /// 设置控制模式按钮点击事件
+        /// </summary>
         private async void BtnSetControlMode_Click(object sender, EventArgs e)
         {
-            if (!isConnected)
+            if (!_powerService.IsConnected)
             {
                 ShowMessage("请先连接设备");
                 return;
@@ -377,14 +291,16 @@ namespace MainUI.PowerSupplyControl
                 btnSetControlMode.Text = "设置中...";
 
                 var mode = cmbControlMode.SelectedIndex == 0 ?
-                    PowerSupplyProtocol.ControlMode.Local : PowerSupplyProtocol.ControlMode.Remote;
+                    ControlMode.Local : ControlMode.Remote;
 
-                bool success = await Task.Run(() => powerSupply.SetControlMode(mode));
-                ShowMessage($"设置控制模式: {(success ? "成功" : "失败")}");
+                // 使用电源服务异步设置控制模式
+                bool success = await _powerService.SetControlModeAsync(mode);
+
+                // 结果通过OperationCompleted事件显示
             }
             catch (Exception ex)
             {
-                ShowMessage($"设置失败: {ex.Message}");
+                ShowMessage($"设置控制模式时发生异常: {ex.Message}");
             }
             finally
             {
@@ -392,10 +308,14 @@ namespace MainUI.PowerSupplyControl
                 btnSetControlMode.Text = "设置";
             }
         }
-
+        /// <summary>
+        /// 设置输出档位按钮点击事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void BtnSetOutputRange_Click(object sender, EventArgs e)
         {
-            if (!isConnected)
+            if (!_powerService.IsConnected)
             {
                 ShowMessage("请先连接设备");
                 return;
@@ -407,14 +327,16 @@ namespace MainUI.PowerSupplyControl
                 btnSetOutputRange.Text = "设置中...";
 
                 var range = cmbOutputRange.SelectedIndex == 0 ?
-                    PowerSupplyProtocol.OutputRange.High : PowerSupplyProtocol.OutputRange.Low;
+                    OutputRange.High : OutputRange.Low;
 
-                bool success = await Task.Run(() => powerSupply.SetOutputRange(range));
-                ShowMessage($"设置输出档位: {(success ? "成功" : "失败")}");
+                // 使用电源服务异步设置输出档位
+                bool success = await _powerService.SetOutputRangeAsync(range);
+
+                // 结果通过OperationCompleted事件显示
             }
             catch (Exception ex)
             {
-                ShowMessage($"设置失败: {ex.Message}");
+                ShowMessage($"设置输出档位时发生异常: {ex.Message}");
             }
             finally
             {
@@ -423,9 +345,13 @@ namespace MainUI.PowerSupplyControl
             }
         }
 
+        /// <summary>
+        /// 设置输出电压按钮点击事件
+        /// </summary>
+
         private async void BtnSetVoltage_Click(object sender, EventArgs e)
         {
-            if (!isConnected)
+            if (!_powerService.IsConnected)
             {
                 ShowMessage("请先连接设备");
                 return;
@@ -436,16 +362,20 @@ namespace MainUI.PowerSupplyControl
                 btnSetVoltage.Enabled = false;
                 btnSetVoltage.Text = "设置中...";
 
-                var range = cmbOutputRange.SelectedIndex == 0 ?
-                    PowerSupplyProtocol.OutputRange.High : PowerSupplyProtocol.OutputRange.Low;
+                double voltage = (double)numVoltage.Value;
 
-                bool success = await Task.Run(() =>
-                    powerSupply.SetVoltage((double)numVoltage.Value, range));
-                ShowMessage($"设置电压: {(success ? "成功" : "失败")}");
+                // 根据当前选择的档位来设置电压
+                var range = cmbOutputRange.SelectedIndex == 0 ?
+                    OutputRange.High : OutputRange.Low;
+
+                // 使用电源服务异步设置电压，传递档位参数
+                bool success = await _powerService.SetVoltageAsync(voltage, range);
+
+                // 结果通过OperationCompleted事件显示
             }
             catch (Exception ex)
             {
-                ShowMessage($"设置失败: {ex.Message}");
+                ShowMessage($"设置输出电压时发生异常: {ex.Message}");
             }
             finally
             {
@@ -454,9 +384,14 @@ namespace MainUI.PowerSupplyControl
             }
         }
 
+        /// <summary>
+        /// 设置输出频率按钮点击事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void BtnSetFrequency_Click(object sender, EventArgs e)
         {
-            if (!isConnected)
+            if (!_powerService.IsConnected)
             {
                 ShowMessage("请先连接设备");
                 return;
@@ -467,13 +402,16 @@ namespace MainUI.PowerSupplyControl
                 btnSetFrequency.Enabled = false;
                 btnSetFrequency.Text = "设置中...";
 
-                bool success = await Task.Run(() =>
-                    powerSupply.SetFrequency((double)numFrequency.Value));
-                ShowMessage($"设置频率: {(success ? "成功" : "失败")}");
+                double frequency = (double)numFrequency.Value;
+
+                // 使用电源服务异步设置频率
+                bool success = await _powerService.SetFrequencyAsync(frequency);
+
+                // 结果通过OperationCompleted事件显示
             }
             catch (Exception ex)
             {
-                ShowMessage($"设置失败: {ex.Message}");
+                ShowMessage($"设置输出频率时发生异常: {ex.Message}");
             }
             finally
             {
@@ -482,9 +420,14 @@ namespace MainUI.PowerSupplyControl
             }
         }
 
+        /// <summary>
+        /// 电源复位按钮点击事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void BtnReset_Click(object sender, EventArgs e)
         {
-            if (!isConnected)
+            if (!_powerService.IsConnected)
             {
                 ShowMessage("请先连接设备");
                 return;
@@ -495,12 +438,14 @@ namespace MainUI.PowerSupplyControl
                 btnReset.Enabled = false;
                 btnReset.Text = "复位中...";
 
-                bool success = await Task.Run(() => powerSupply.PowerReset());
-                ShowMessage($"电源复位: {(success ? "成功" : "失败")}");
+                // 使用电源服务异步执行复位
+                bool success = await _powerService.PowerResetAsync();
+
+                // 结果通过OperationCompleted事件显示
             }
             catch (Exception ex)
             {
-                ShowMessage($"复位失败: {ex.Message}");
+                ShowMessage($"电源复位时发生异常: {ex.Message}");
             }
             finally
             {
@@ -509,21 +454,14 @@ namespace MainUI.PowerSupplyControl
             }
         }
 
-        private void ShowMessage(string message)
+        /// <summary>
+        /// 快速启动按钮点击事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void BtnQuickStart_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(this, $"[{DateTime.Now:HH:mm:ss}] {message}");
-        }
-
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            Disconnect();
-            base.OnFormClosing(e);
-        }
-
-        // 快捷操作事件处理
-        private void BtnQuickStart_Click(object sender, EventArgs e)
-        {
-            if (!isConnected)
+            if (!_powerService.IsConnected)
             {
                 ShowMessage("请先连接设备");
                 return;
@@ -531,31 +469,40 @@ namespace MainUI.PowerSupplyControl
 
             try
             {
-                // 快速启动：设置为电脑控制模式 + 低档输出
-                bool success1 = powerSupply.SetControlMode(PowerSupplyProtocol.ControlMode.Remote);
-                bool success2 = powerSupply.SetOutputRange(PowerSupplyProtocol.OutputRange.Low);
+                btnQuickStart.Enabled = false;
+                btnQuickStart.Text = "启动中...";
 
-                if (success1 && success2)
+                // 使用电源服务异步执行快速启动
+                bool success = await _powerService.QuickStartAsync();
+
+                if (success)
                 {
-                    // 更新UI显示
-                    cmbControlMode.SelectedIndex = 1;
-                    cmbOutputRange.SelectedIndex = 1;
-                    ShowMessage("快速启动成功");
+                    // 更新UI显示为对应设置
+                    cmbControlMode.SelectedIndex = 1; // 电脑控制
+                    cmbOutputRange.SelectedIndex = 1; // 低档
                 }
-                else
-                {
-                    ShowMessage("快速启动失败");
-                }
+
+                // 结果通过OperationCompleted事件显示
             }
             catch (Exception ex)
             {
-                ShowMessage($"快速启动失败: {ex.Message}");
+                ShowMessage($"快速启动时发生异常: {ex.Message}");
+            }
+            finally
+            {
+                btnQuickStart.Enabled = true;
+                btnQuickStart.Text = "快速启动\r\n(电脑控制+低档)";
             }
         }
 
-        private void BtnEmergencyStop_Click(object sender, EventArgs e)
+        /// <summary>
+        /// 紧急停止按钮点击事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void BtnEmergencyStop_Click(object sender, EventArgs e)
         {
-            if (!isConnected)
+            if (!_powerService.IsConnected)
             {
                 ShowMessage("设备未连接");
                 return;
@@ -563,25 +510,61 @@ namespace MainUI.PowerSupplyControl
 
             try
             {
-                // 紧急停止：复位电源并设置为本机控制
-                bool resetSuccess = powerSupply.PowerReset();
-                Thread.Sleep(100); // 等待复位完成
-                bool modeSuccess = powerSupply.SetControlMode(PowerSupplyProtocol.ControlMode.Local);
+                btnEmergencyStop.Enabled = false;
+                btnEmergencyStop.Text = "停止中...";
 
-                if (resetSuccess && modeSuccess)
+                // 使用电源服务异步执行紧急停止
+                bool success = await _powerService.EmergencyStopAsync();
+
+                if (success)
                 {
-                    cmbControlMode.SelectedIndex = 0;
-                    ShowMessage("紧急停止执行完成");
+                    // 更新UI显示为对应设置
+                    cmbControlMode.SelectedIndex = 0; // 本机控制
                 }
-                else
-                {
-                    ShowMessage("紧急停止执行失败");
-                }
+
+                // 结果通过OperationCompleted事件显示
             }
             catch (Exception ex)
             {
-                ShowMessage($"紧急停止失败: {ex.Message}");
+                ShowMessage($"紧急停止时发生异常: {ex.Message}");
+            }
+            finally
+            {
+                btnEmergencyStop.Enabled = true;
+                btnEmergencyStop.Text = "紧急停止";
             }
         }
+
+        private void ShowMessage(string message)
+        {
+            MessageBox.Show(this, $"[{DateTime.Now:HH:mm:ss}] {message}");
+        }
+
+        /// <summary>
+        /// 窗体关闭前的清理工作
+        /// </summary>
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            try
+            {
+                // 停止界面刷新定时器
+                refreshTimer?.Stop();
+
+                // 取消订阅电源服务事件
+                UnsubscribePowerServiceEvents();
+
+                // 注意：不要在这里断开电源连接，因为其他地方可能还在使用
+                // 电源连接由服务统一管理，窗体关闭不应影响连接状态
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error($"窗体关闭清理时发生异常: {ex.Message}", ex);
+            }
+            finally
+            {
+                base.OnFormClosing(e);
+            }
+        }
+        #endregion
     }
 }

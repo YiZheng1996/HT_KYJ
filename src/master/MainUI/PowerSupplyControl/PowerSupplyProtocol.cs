@@ -542,7 +542,6 @@ namespace MainUI.PowerSupplyControl
         /// <summary>
         /// 总功率
         /// </summary>
-        [DefaultValue(0.0)]
         public double TotalPower => PowerU + PowerV + PowerW;
 
         /// <summary>
