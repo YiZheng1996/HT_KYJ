@@ -56,11 +56,10 @@ namespace MainUI
             tabs1 = new Tabs();
             tabPage3 = new AntdUI.TabPage();
             grpRainy = new UIPanel();
-            BtnFMPowerSupply = new UIButton();
             uiPanel11 = new UIPanel();
             label10 = new AntdUI.Label();
             uiLabel1 = new UILabel();
-            uiLabel4 = new UILabel();
+            LabTemperature03 = new UILabel();
             uiPanel6 = new UIPanel();
             minus = new PictureBox();
             LabelNumber = new UIDigitalLabel();
@@ -111,6 +110,7 @@ namespace MainUI
             panelHand = new UIPanel();
             RadioHand = new UIRadioButton();
             RadioAuto = new UIRadioButton();
+            BtnFMPowerSupply = new UIButton();
             btnReportForms = new AntdUI.Button();
             btnWorkmanshipForms = new AntdUI.Button();
             txtDrawingNo = new UITextBox();
@@ -188,7 +188,7 @@ namespace MainUI
             btnProductSelection.FillDisableColor = Color.FromArgb(80, 160, 255);
             btnProductSelection.Font = new Font("思源黑体 CN Bold", 12F, FontStyle.Bold);
             btnProductSelection.ForeDisableColor = Color.White;
-            btnProductSelection.Location = new Point(213, 0);
+            btnProductSelection.Location = new Point(410, 0);
             btnProductSelection.MinimumSize = new Size(1, 1);
             btnProductSelection.Name = "btnProductSelection";
             btnProductSelection.Radius = 10;
@@ -611,7 +611,6 @@ namespace MainUI
             // grpRainy
             // 
             grpRainy.BackColor = Color.FromArgb(236, 236, 237);
-            grpRainy.Controls.Add(BtnFMPowerSupply);
             grpRainy.Controls.Add(uiPanel11);
             grpRainy.Controls.Add(uiPanel6);
             grpRainy.Controls.Add(ucGrid1);
@@ -639,32 +638,12 @@ namespace MainUI
             grpRainy.Text = null;
             grpRainy.TextAlignment = ContentAlignment.MiddleCenter;
             // 
-            // BtnFMPowerSupply
-            // 
-            BtnFMPowerSupply.BackColor = Color.Transparent;
-            BtnFMPowerSupply.Cursor = Cursors.Hand;
-            BtnFMPowerSupply.FillDisableColor = Color.FromArgb(80, 160, 255);
-            BtnFMPowerSupply.Font = new Font("思源黑体 CN Bold", 12F, FontStyle.Bold);
-            BtnFMPowerSupply.ForeDisableColor = Color.White;
-            BtnFMPowerSupply.Location = new Point(210, 289);
-            BtnFMPowerSupply.MinimumSize = new Size(1, 1);
-            BtnFMPowerSupply.Name = "BtnFMPowerSupply";
-            BtnFMPowerSupply.Radius = 10;
-            BtnFMPowerSupply.RectDisableColor = Color.FromArgb(80, 160, 255);
-            BtnFMPowerSupply.ShowFocusLine = true;
-            BtnFMPowerSupply.Size = new Size(158, 35);
-            BtnFMPowerSupply.TabIndex = 524;
-            BtnFMPowerSupply.Text = "调频电源设置";
-            BtnFMPowerSupply.TipsFont = new Font("微软雅黑", 9F, FontStyle.Regular, GraphicsUnit.Point, 134);
-            BtnFMPowerSupply.TipsText = "1";
-            BtnFMPowerSupply.Click += BtnFMPowerSupply_Click;
-            // 
             // uiPanel11
             // 
             uiPanel11.BackColor = Color.Transparent;
             uiPanel11.Controls.Add(label10);
             uiPanel11.Controls.Add(uiLabel1);
-            uiPanel11.Controls.Add(uiLabel4);
+            uiPanel11.Controls.Add(LabTemperature03);
             uiPanel11.FillColor = Color.White;
             uiPanel11.FillColor2 = Color.White;
             uiPanel11.FillDisableColor = Color.White;
@@ -704,18 +683,18 @@ namespace MainUI
             uiLabel1.TabIndex = 496;
             uiLabel1.Text = "空气温度检测(℃)";
             // 
-            // uiLabel4
+            // LabTemperature03
             // 
-            uiLabel4.BackColor = Color.Transparent;
-            uiLabel4.Font = new Font("宋体", 35F);
-            uiLabel4.ForeColor = Color.FromArgb(64, 64, 64);
-            uiLabel4.Location = new Point(2, 8);
-            uiLabel4.Name = "uiLabel4";
-            uiLabel4.Size = new Size(179, 62);
-            uiLabel4.TabIndex = 0;
-            uiLabel4.Tag = "1";
-            uiLabel4.Text = "1000.0";
-            uiLabel4.TextAlign = ContentAlignment.MiddleCenter;
+            LabTemperature03.BackColor = Color.Transparent;
+            LabTemperature03.Font = new Font("宋体", 35F);
+            LabTemperature03.ForeColor = Color.FromArgb(64, 64, 64);
+            LabTemperature03.Location = new Point(2, 8);
+            LabTemperature03.Name = "LabTemperature03";
+            LabTemperature03.Size = new Size(179, 62);
+            LabTemperature03.TabIndex = 0;
+            LabTemperature03.Tag = "1";
+            LabTemperature03.Text = "1000.0";
+            LabTemperature03.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // uiPanel6
             // 
@@ -1459,6 +1438,26 @@ namespace MainUI
             RadioAuto.Text = "自动控制";
             RadioAuto.Click += RadioAuto_Click;
             // 
+            // BtnFMPowerSupply
+            // 
+            BtnFMPowerSupply.BackColor = Color.Transparent;
+            BtnFMPowerSupply.Cursor = Cursors.Hand;
+            BtnFMPowerSupply.FillDisableColor = Color.FromArgb(80, 160, 255);
+            BtnFMPowerSupply.Font = new Font("思源黑体 CN Bold", 12F, FontStyle.Bold);
+            BtnFMPowerSupply.ForeDisableColor = Color.White;
+            BtnFMPowerSupply.Location = new Point(246, 0);
+            BtnFMPowerSupply.MinimumSize = new Size(1, 1);
+            BtnFMPowerSupply.Name = "BtnFMPowerSupply";
+            BtnFMPowerSupply.Radius = 10;
+            BtnFMPowerSupply.RectDisableColor = Color.FromArgb(80, 160, 255);
+            BtnFMPowerSupply.ShowFocusLine = true;
+            BtnFMPowerSupply.Size = new Size(158, 35);
+            BtnFMPowerSupply.TabIndex = 524;
+            BtnFMPowerSupply.Text = "调频电源设置";
+            BtnFMPowerSupply.TipsFont = new Font("微软雅黑", 9F, FontStyle.Regular, GraphicsUnit.Point, 134);
+            BtnFMPowerSupply.TipsText = "1";
+            BtnFMPowerSupply.Click += BtnFMPowerSupply_Click;
+            // 
             // btnReportForms
             // 
             btnReportForms.BackActive = Color.FromArgb(196, 199, 204);
@@ -1568,9 +1567,9 @@ namespace MainUI
             alert.BackColor = Color.Transparent;
             alert.Font = new Font("微软雅黑", 13F, FontStyle.Bold);
             alert.Icon = TType.Success;
-            alert.Location = new Point(377, 2);
+            alert.Location = new Point(574, 2);
             alert.Name = "alert";
-            alert.Size = new Size(1379, 33);
+            alert.Size = new Size(1182, 33);
             alert.TabIndex = 514;
             alert.Text = "产品型号";
             alert.Visible = false;
@@ -1579,6 +1578,7 @@ namespace MainUI
             // 
             AutoScaleMode = AutoScaleMode.None;
             BackColor = Color.FromArgb(236, 236, 236);
+            Controls.Add(BtnFMPowerSupply);
             Controls.Add(btnProductSelection);
             Controls.Add(alert);
             Controls.Add(tabs1);
@@ -1703,7 +1703,7 @@ namespace MainUI
         private UIPanel uiPanel11;
         private AntdUI.Label label10;
         private UILabel uiLabel1;
-        private UILabel uiLabel4;
+        private UILabel LabTemperature03;
         private UIButton BtnFMPowerSupply;
     }
 }

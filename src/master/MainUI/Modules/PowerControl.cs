@@ -3,20 +3,20 @@ using System.ComponentModel;
 
 namespace MainUI.Modules
 {
-    public partial class TemperatureGrp : BaseModule
+    public partial class PowerControl : BaseModule
     {
-        private const int Count = 3;
+        private const int Count = 7;
         public event ValueGroupHandler<double> ValueGrpChaned;
-        public TemperatureGrp()
+        public PowerControl()
         {
-            Driver = OPCHelper.opcTemperature;
+            Driver = OPCHelper.opcPowerControl;
             InitializeComponent();
         }
 
-        public TemperatureGrp(IContainer container)
+        public PowerControl(IContainer container)
             : base(container)
         {
-            Driver = OPCHelper.opcTemperature;
+            Driver = OPCHelper.opcPowerControl;
         }
         private double[] _TestList = new double[Count];
         public double[] TestList

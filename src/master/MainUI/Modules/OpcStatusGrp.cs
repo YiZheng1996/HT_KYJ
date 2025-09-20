@@ -27,8 +27,8 @@ namespace MainUI.Modules
         public bool Simulated { get; set; }
         public override void Init()
         {
-            AddListening("_System._NoError", delegate (bool value) { NoError = value; });
-            AddListening("_System._Simulated", delegate (bool value) { Simulated = value; });
+            AddListening("PowerCabinet.PowerControl._System._NoError", delegate (bool value) { NoError = value; });
+            AddListening("PowerCabinet.PowerControl._System._Simulated", delegate (bool value) { Simulated = value; });
             base.Init();
         }
     }

@@ -10,7 +10,6 @@
         #region 控件声明
 
         private Sunny.UI.UIPanel grpConnection;
-        private System.Windows.Forms.Label lblConnectionStatus;
 
         private Sunny.UI.UIPanel grpDataDisplay;
         private Sunny.UI.UILabel lblVoltageTitle;
@@ -29,16 +28,6 @@
         private Sunny.UI.UILabel lblFrequency;
         private Sunny.UI.UILabel lblFaultStatus;
 
-        private Sunny.UI.UIPanel grpProgress;
-        private System.Windows.Forms.Label lblProgressVoltage;
-        private System.Windows.Forms.ProgressBar progressVoltageU;
-        private System.Windows.Forms.ProgressBar progressVoltageV;
-        private System.Windows.Forms.ProgressBar progressVoltageW;
-        private System.Windows.Forms.Label lblProgressCurrent;
-        private System.Windows.Forms.ProgressBar progressCurrentU;
-        private System.Windows.Forms.ProgressBar progressCurrentV;
-        private System.Windows.Forms.ProgressBar progressCurrentW;
-
         private Sunny.UI.UIPanel grpControl;
         private Sunny.UI.UILabel lblControlMode;
         private Sunny.UI.UIComboBox cmbControlMode;
@@ -51,7 +40,7 @@
         private Sunny.UI.UIButton btnSetVoltage;
         private Sunny.UI.UILabel lblFrequencySet;
         private System.Windows.Forms.NumericUpDown numFrequency;
-        private System.Windows.Forms.Button btnSetFrequency;
+        private Sunny.UI.UIButton btnSetFrequency;
         private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.Button btnQuickStart;
         private System.Windows.Forms.Button btnEmergencyStop;
@@ -81,11 +70,16 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmPowerSupplyForm));
             grpConnection = new UIPanel();
-            uiLabel1 = new UILabel();
-            lblConnectionStatus = new Label();
-            grpDataDisplay = new UIPanel();
-            uiLine2 = new UILine();
             lblFaultStatus = new UILabel();
+            grpDataDisplay = new UIPanel();
+            lbTotalFactor = new UILabel();
+            lblFactorW = new UILabel();
+            lblFactorV = new UILabel();
+            lblFactorU = new UILabel();
+            uiLabel8 = new UILabel();
+            lbTotalVoltage = new UILabel();
+            lbTotalCurrent = new UILabel();
+            uiLine2 = new UILine();
             lblFrequency = new UILabel();
             lblTotalPower = new UILabel();
             lblPowerW = new UILabel();
@@ -100,22 +94,13 @@
             lblVoltageV = new UILabel();
             lblVoltageU = new UILabel();
             lblVoltageTitle = new UILabel();
-            grpProgress = new UIPanel();
-            uiLine3 = new UILine();
-            progressCurrentW = new ProgressBar();
-            progressCurrentV = new ProgressBar();
-            progressCurrentU = new ProgressBar();
-            lblProgressCurrent = new Label();
-            progressVoltageW = new ProgressBar();
-            progressVoltageV = new ProgressBar();
-            progressVoltageU = new ProgressBar();
-            lblProgressVoltage = new Label();
             grpControl = new UIPanel();
+            btnClose = new Button();
             uiLine1 = new UILine();
             btnEmergencyStop = new Button();
             btnQuickStart = new Button();
             btnReset = new Button();
-            btnSetFrequency = new Button();
+            btnSetFrequency = new UIButton();
             numFrequency = new NumericUpDown();
             lblFrequencySet = new UILabel();
             btnSetVoltage = new UIButton();
@@ -129,7 +114,6 @@
             lblControlMode = new UILabel();
             grpConnection.SuspendLayout();
             grpDataDisplay.SuspendLayout();
-            grpProgress.SuspendLayout();
             grpControl.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numFrequency).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numVoltage).BeginInit();
@@ -137,51 +121,43 @@
             // 
             // grpConnection
             // 
-            grpConnection.Controls.Add(uiLabel1);
-            grpConnection.Controls.Add(lblConnectionStatus);
-            grpConnection.FillColor = Color.White;
-            grpConnection.FillColor2 = Color.White;
+            grpConnection.Controls.Add(lblFaultStatus);
             grpConnection.Font = new Font("微软雅黑", 9F, FontStyle.Bold, GraphicsUnit.Point, 134);
-            grpConnection.Location = new Point(12, 47);
+            grpConnection.Location = new Point(14, 47);
             grpConnection.Margin = new Padding(4, 5, 4, 5);
             grpConnection.MinimumSize = new Size(1, 1);
             grpConnection.Name = "grpConnection";
             grpConnection.Padding = new Padding(0, 32, 0, 0);
             grpConnection.RectColor = Color.FromArgb(65, 100, 204);
-            grpConnection.Size = new Size(966, 60);
+            grpConnection.Size = new Size(779, 60);
             grpConnection.TabIndex = 0;
             grpConnection.TabStop = false;
             grpConnection.Text = null;
             grpConnection.TextAlignment = ContentAlignment.MiddleLeft;
             // 
-            // uiLabel1
+            // lblFaultStatus
             // 
-            uiLabel1.BackColor = Color.Transparent;
-            uiLabel1.Font = new Font("微软雅黑", 11F);
-            uiLabel1.ForeColor = Color.FromArgb(48, 48, 48);
-            uiLabel1.Location = new Point(23, 20);
-            uiLabel1.Name = "uiLabel1";
-            uiLabel1.Size = new Size(80, 23);
-            uiLabel1.TabIndex = 5;
-            uiLabel1.Text = "连接状态:";
-            uiLabel1.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // lblConnectionStatus
-            // 
-            lblConnectionStatus.BackColor = Color.Transparent;
-            lblConnectionStatus.Font = new Font("微软雅黑", 11F);
-            lblConnectionStatus.ForeColor = Color.Red;
-            lblConnectionStatus.Location = new Point(113, 20);
-            lblConnectionStatus.Name = "lblConnectionStatus";
-            lblConnectionStatus.Size = new Size(262, 23);
-            lblConnectionStatus.TabIndex = 4;
-            lblConnectionStatus.Text = "未连接";
-            lblConnectionStatus.TextAlign = ContentAlignment.MiddleLeft;
+            lblFaultStatus.BackColor = Color.FromArgb(255, 128, 128);
+            lblFaultStatus.BorderStyle = BorderStyle.Fixed3D;
+            lblFaultStatus.Font = new Font("微软雅黑", 11F);
+            lblFaultStatus.ForeColor = Color.Black;
+            lblFaultStatus.Location = new Point(27, 19);
+            lblFaultStatus.Name = "lblFaultStatus";
+            lblFaultStatus.Size = new Size(306, 23);
+            lblFaultStatus.TabIndex = 14;
+            lblFaultStatus.Text = "状态: 正常";
+            lblFaultStatus.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // grpDataDisplay
             // 
+            grpDataDisplay.Controls.Add(lbTotalFactor);
+            grpDataDisplay.Controls.Add(lblFactorW);
+            grpDataDisplay.Controls.Add(lblFactorV);
+            grpDataDisplay.Controls.Add(lblFactorU);
+            grpDataDisplay.Controls.Add(uiLabel8);
+            grpDataDisplay.Controls.Add(lbTotalVoltage);
+            grpDataDisplay.Controls.Add(lbTotalCurrent);
             grpDataDisplay.Controls.Add(uiLine2);
-            grpDataDisplay.Controls.Add(lblFaultStatus);
             grpDataDisplay.Controls.Add(lblFrequency);
             grpDataDisplay.Controls.Add(lblTotalPower);
             grpDataDisplay.Controls.Add(lblPowerW);
@@ -197,17 +173,106 @@
             grpDataDisplay.Controls.Add(lblVoltageU);
             grpDataDisplay.Controls.Add(lblVoltageTitle);
             grpDataDisplay.Font = new Font("微软雅黑", 9F, FontStyle.Bold, GraphicsUnit.Point, 134);
-            grpDataDisplay.Location = new Point(12, 117);
+            grpDataDisplay.Location = new Point(14, 117);
             grpDataDisplay.Margin = new Padding(4, 5, 4, 5);
             grpDataDisplay.MinimumSize = new Size(1, 1);
             grpDataDisplay.Name = "grpDataDisplay";
             grpDataDisplay.Padding = new Padding(0, 32, 0, 0);
             grpDataDisplay.RectColor = Color.FromArgb(65, 100, 204);
-            grpDataDisplay.Size = new Size(595, 199);
+            grpDataDisplay.Size = new Size(779, 199);
             grpDataDisplay.TabIndex = 1;
             grpDataDisplay.TabStop = false;
             grpDataDisplay.Text = null;
             grpDataDisplay.TextAlignment = ContentAlignment.MiddleLeft;
+            // 
+            // lbTotalFactor
+            // 
+            lbTotalFactor.BackColor = Color.Orange;
+            lbTotalFactor.BorderStyle = BorderStyle.Fixed3D;
+            lbTotalFactor.Font = new Font("微软雅黑", 11F);
+            lbTotalFactor.ForeColor = Color.FromArgb(48, 48, 48);
+            lbTotalFactor.Location = new Point(433, 159);
+            lbTotalFactor.Name = "lbTotalFactor";
+            lbTotalFactor.Size = new Size(148, 23);
+            lbTotalFactor.TabIndex = 23;
+            lbTotalFactor.Text = "总因素: 0";
+            lbTotalFactor.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblFactorW
+            // 
+            lblFactorW.BackColor = Color.DarkTurquoise;
+            lblFactorW.BorderStyle = BorderStyle.Fixed3D;
+            lblFactorW.Font = new Font("微软雅黑", 11F);
+            lblFactorW.ForeColor = Color.FromArgb(48, 48, 48);
+            lblFactorW.Location = new Point(324, 159);
+            lblFactorW.Name = "lblFactorW";
+            lblFactorW.Size = new Size(99, 23);
+            lblFactorW.TabIndex = 22;
+            lblFactorW.Text = "W: 0";
+            lblFactorW.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblFactorV
+            // 
+            lblFactorV.BackColor = Color.DarkTurquoise;
+            lblFactorV.BorderStyle = BorderStyle.Fixed3D;
+            lblFactorV.Font = new Font("微软雅黑", 11F);
+            lblFactorV.ForeColor = Color.FromArgb(48, 48, 48);
+            lblFactorV.Location = new Point(215, 159);
+            lblFactorV.Name = "lblFactorV";
+            lblFactorV.Size = new Size(99, 23);
+            lblFactorV.TabIndex = 21;
+            lblFactorV.Text = "V: 0";
+            lblFactorV.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblFactorU
+            // 
+            lblFactorU.BackColor = Color.DarkTurquoise;
+            lblFactorU.BorderStyle = BorderStyle.Fixed3D;
+            lblFactorU.Font = new Font("微软雅黑", 11F);
+            lblFactorU.ForeColor = Color.FromArgb(48, 48, 48);
+            lblFactorU.Location = new Point(106, 159);
+            lblFactorU.Name = "lblFactorU";
+            lblFactorU.Size = new Size(99, 23);
+            lblFactorU.TabIndex = 20;
+            lblFactorU.Text = "U: 0";
+            lblFactorU.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // uiLabel8
+            // 
+            uiLabel8.Font = new Font("微软雅黑", 11F);
+            uiLabel8.ForeColor = Color.FromArgb(48, 48, 48);
+            uiLabel8.Location = new Point(16, 159);
+            uiLabel8.Name = "uiLabel8";
+            uiLabel8.Size = new Size(80, 23);
+            uiLabel8.TabIndex = 19;
+            uiLabel8.Text = "功率因数(W):";
+            uiLabel8.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lbTotalVoltage
+            // 
+            lbTotalVoltage.BackColor = Color.Orange;
+            lbTotalVoltage.BorderStyle = BorderStyle.Fixed3D;
+            lbTotalVoltage.Font = new Font("微软雅黑", 11F);
+            lbTotalVoltage.ForeColor = Color.FromArgb(48, 48, 48);
+            lbTotalVoltage.Location = new Point(433, 46);
+            lbTotalVoltage.Name = "lbTotalVoltage";
+            lbTotalVoltage.Size = new Size(148, 23);
+            lbTotalVoltage.TabIndex = 18;
+            lbTotalVoltage.Text = "平均电压: 0V";
+            lbTotalVoltage.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lbTotalCurrent
+            // 
+            lbTotalCurrent.BackColor = Color.Orange;
+            lbTotalCurrent.BorderStyle = BorderStyle.Fixed3D;
+            lbTotalCurrent.Font = new Font("微软雅黑", 11F);
+            lbTotalCurrent.ForeColor = Color.FromArgb(48, 48, 48);
+            lbTotalCurrent.Location = new Point(433, 84);
+            lbTotalCurrent.Name = "lbTotalCurrent";
+            lbTotalCurrent.Size = new Size(148, 23);
+            lbTotalCurrent.TabIndex = 17;
+            lbTotalCurrent.Text = "平均电流: 0A";
+            lbTotalCurrent.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // uiLine2
             // 
@@ -218,23 +283,10 @@
             uiLine2.Location = new Point(13, 6);
             uiLine2.MinimumSize = new Size(1, 1);
             uiLine2.Name = "uiLine2";
-            uiLine2.Size = new Size(563, 29);
+            uiLine2.Size = new Size(763, 29);
             uiLine2.TabIndex = 16;
             uiLine2.Text = "实时数据";
             uiLine2.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // lblFaultStatus
-            // 
-            lblFaultStatus.BackColor = Color.LightGreen;
-            lblFaultStatus.BorderStyle = BorderStyle.Fixed3D;
-            lblFaultStatus.Font = new Font("微软雅黑", 11F);
-            lblFaultStatus.ForeColor = Color.FromArgb(48, 48, 48);
-            lblFaultStatus.Location = new Point(151, 155);
-            lblFaultStatus.Name = "lblFaultStatus";
-            lblFaultStatus.Size = new Size(150, 23);
-            lblFaultStatus.TabIndex = 14;
-            lblFaultStatus.Text = "状态: 正常";
-            lblFaultStatus.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // lblFrequency
             // 
@@ -242,9 +294,9 @@
             lblFrequency.BorderStyle = BorderStyle.Fixed3D;
             lblFrequency.Font = new Font("微软雅黑", 11F);
             lblFrequency.ForeColor = Color.FromArgb(48, 48, 48);
-            lblFrequency.Location = new Point(21, 155);
+            lblFrequency.Location = new Point(619, 84);
             lblFrequency.Name = "lblFrequency";
-            lblFrequency.Size = new Size(120, 23);
+            lblFrequency.Size = new Size(120, 57);
             lblFrequency.TabIndex = 13;
             lblFrequency.Text = "频率: 1000.0HZ";
             lblFrequency.TextAlign = ContentAlignment.MiddleLeft;
@@ -255,9 +307,9 @@
             lblTotalPower.BorderStyle = BorderStyle.Fixed3D;
             lblTotalPower.Font = new Font("微软雅黑", 11F);
             lblTotalPower.ForeColor = Color.FromArgb(48, 48, 48);
-            lblTotalPower.Location = new Point(433, 114);
+            lblTotalPower.Location = new Point(433, 120);
             lblTotalPower.Name = "lblTotalPower";
-            lblTotalPower.Size = new Size(135, 23);
+            lblTotalPower.Size = new Size(148, 23);
             lblTotalPower.TabIndex = 12;
             lblTotalPower.Text = "总功率: 0W";
             lblTotalPower.TextAlign = ContentAlignment.MiddleLeft;
@@ -268,7 +320,7 @@
             lblPowerW.BorderStyle = BorderStyle.Fixed3D;
             lblPowerW.Font = new Font("微软雅黑", 11F);
             lblPowerW.ForeColor = Color.FromArgb(48, 48, 48);
-            lblPowerW.Location = new Point(324, 114);
+            lblPowerW.Location = new Point(324, 120);
             lblPowerW.Name = "lblPowerW";
             lblPowerW.Size = new Size(99, 23);
             lblPowerW.TabIndex = 11;
@@ -281,7 +333,7 @@
             lblPowerV.BorderStyle = BorderStyle.Fixed3D;
             lblPowerV.Font = new Font("微软雅黑", 11F);
             lblPowerV.ForeColor = Color.FromArgb(48, 48, 48);
-            lblPowerV.Location = new Point(215, 114);
+            lblPowerV.Location = new Point(215, 120);
             lblPowerV.Name = "lblPowerV";
             lblPowerV.Size = new Size(99, 23);
             lblPowerV.TabIndex = 10;
@@ -294,7 +346,7 @@
             lblPowerU.BorderStyle = BorderStyle.Fixed3D;
             lblPowerU.Font = new Font("微软雅黑", 11F);
             lblPowerU.ForeColor = Color.FromArgb(48, 48, 48);
-            lblPowerU.Location = new Point(106, 114);
+            lblPowerU.Location = new Point(106, 120);
             lblPowerU.Name = "lblPowerU";
             lblPowerU.Size = new Size(99, 23);
             lblPowerU.TabIndex = 9;
@@ -305,7 +357,7 @@
             // 
             lblPowerTitle.Font = new Font("微软雅黑", 11F);
             lblPowerTitle.ForeColor = Color.FromArgb(48, 48, 48);
-            lblPowerTitle.Location = new Point(16, 114);
+            lblPowerTitle.Location = new Point(16, 120);
             lblPowerTitle.Name = "lblPowerTitle";
             lblPowerTitle.Size = new Size(80, 23);
             lblPowerTitle.TabIndex = 8;
@@ -318,7 +370,7 @@
             lblCurrentW.BorderStyle = BorderStyle.Fixed3D;
             lblCurrentW.Font = new Font("微软雅黑", 11F);
             lblCurrentW.ForeColor = Color.FromArgb(48, 48, 48);
-            lblCurrentW.Location = new Point(324, 80);
+            lblCurrentW.Location = new Point(324, 84);
             lblCurrentW.Name = "lblCurrentW";
             lblCurrentW.Size = new Size(99, 23);
             lblCurrentW.TabIndex = 7;
@@ -331,7 +383,7 @@
             lblCurrentV.BorderStyle = BorderStyle.Fixed3D;
             lblCurrentV.Font = new Font("微软雅黑", 11F);
             lblCurrentV.ForeColor = Color.FromArgb(48, 48, 48);
-            lblCurrentV.Location = new Point(215, 80);
+            lblCurrentV.Location = new Point(215, 84);
             lblCurrentV.Name = "lblCurrentV";
             lblCurrentV.Size = new Size(99, 23);
             lblCurrentV.TabIndex = 6;
@@ -344,7 +396,7 @@
             lblCurrentU.BorderStyle = BorderStyle.Fixed3D;
             lblCurrentU.Font = new Font("微软雅黑", 11F);
             lblCurrentU.ForeColor = Color.FromArgb(48, 48, 48);
-            lblCurrentU.Location = new Point(106, 80);
+            lblCurrentU.Location = new Point(106, 84);
             lblCurrentU.Name = "lblCurrentU";
             lblCurrentU.Size = new Size(99, 23);
             lblCurrentU.TabIndex = 5;
@@ -355,7 +407,7 @@
             // 
             lblCurrentTitle.Font = new Font("微软雅黑", 11F);
             lblCurrentTitle.ForeColor = Color.FromArgb(48, 48, 48);
-            lblCurrentTitle.Location = new Point(16, 80);
+            lblCurrentTitle.Location = new Point(16, 84);
             lblCurrentTitle.Name = "lblCurrentTitle";
             lblCurrentTitle.Size = new Size(80, 23);
             lblCurrentTitle.TabIndex = 4;
@@ -412,120 +464,10 @@
             lblVoltageTitle.Text = "三相电压(V):";
             lblVoltageTitle.TextAlign = ContentAlignment.MiddleLeft;
             // 
-            // grpProgress
-            // 
-            grpProgress.Controls.Add(uiLine3);
-            grpProgress.Controls.Add(progressCurrentW);
-            grpProgress.Controls.Add(progressCurrentV);
-            grpProgress.Controls.Add(progressCurrentU);
-            grpProgress.Controls.Add(lblProgressCurrent);
-            grpProgress.Controls.Add(progressVoltageW);
-            grpProgress.Controls.Add(progressVoltageV);
-            grpProgress.Controls.Add(progressVoltageU);
-            grpProgress.Controls.Add(lblProgressVoltage);
-            grpProgress.Font = new Font("微软雅黑", 9F, FontStyle.Bold, GraphicsUnit.Point, 134);
-            grpProgress.Location = new Point(628, 117);
-            grpProgress.Margin = new Padding(4, 5, 4, 5);
-            grpProgress.MinimumSize = new Size(1, 1);
-            grpProgress.Name = "grpProgress";
-            grpProgress.Padding = new Padding(0, 32, 0, 0);
-            grpProgress.RectColor = Color.FromArgb(65, 100, 204);
-            grpProgress.Size = new Size(350, 199);
-            grpProgress.TabIndex = 2;
-            grpProgress.TabStop = false;
-            grpProgress.Text = null;
-            grpProgress.TextAlignment = ContentAlignment.MiddleLeft;
-            // 
-            // uiLine3
-            // 
-            uiLine3.BackColor = Color.Transparent;
-            uiLine3.Font = new Font("微软雅黑", 12F, FontStyle.Regular, GraphicsUnit.Point, 134);
-            uiLine3.ForeColor = Color.FromArgb(48, 48, 48);
-            uiLine3.LineColor = Color.FromArgb(65, 100, 204);
-            uiLine3.Location = new Point(15, 6);
-            uiLine3.MinimumSize = new Size(1, 1);
-            uiLine3.Name = "uiLine3";
-            uiLine3.Size = new Size(308, 29);
-            uiLine3.TabIndex = 17;
-            uiLine3.Text = "数据可视化";
-            uiLine3.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // progressCurrentW
-            // 
-            progressCurrentW.Location = new Point(228, 126);
-            progressCurrentW.Maximum = 50;
-            progressCurrentW.Name = "progressCurrentW";
-            progressCurrentW.Size = new Size(90, 20);
-            progressCurrentW.Style = ProgressBarStyle.Continuous;
-            progressCurrentW.TabIndex = 7;
-            // 
-            // progressCurrentV
-            // 
-            progressCurrentV.Location = new Point(128, 126);
-            progressCurrentV.Maximum = 50;
-            progressCurrentV.Name = "progressCurrentV";
-            progressCurrentV.Size = new Size(90, 20);
-            progressCurrentV.Style = ProgressBarStyle.Continuous;
-            progressCurrentV.TabIndex = 6;
-            // 
-            // progressCurrentU
-            // 
-            progressCurrentU.Location = new Point(28, 126);
-            progressCurrentU.Maximum = 50;
-            progressCurrentU.Name = "progressCurrentU";
-            progressCurrentU.Size = new Size(90, 20);
-            progressCurrentU.Style = ProgressBarStyle.Continuous;
-            progressCurrentU.TabIndex = 5;
-            // 
-            // lblProgressCurrent
-            // 
-            lblProgressCurrent.Font = new Font("微软雅黑", 11F);
-            lblProgressCurrent.Location = new Point(18, 101);
-            lblProgressCurrent.Name = "lblProgressCurrent";
-            lblProgressCurrent.Size = new Size(120, 20);
-            lblProgressCurrent.TabIndex = 4;
-            lblProgressCurrent.Text = "电流进度 (U-V-W):";
-            // 
-            // progressVoltageW
-            // 
-            progressVoltageW.Location = new Point(228, 71);
-            progressVoltageW.Maximum = 300;
-            progressVoltageW.Name = "progressVoltageW";
-            progressVoltageW.Size = new Size(90, 20);
-            progressVoltageW.Style = ProgressBarStyle.Continuous;
-            progressVoltageW.TabIndex = 3;
-            // 
-            // progressVoltageV
-            // 
-            progressVoltageV.Location = new Point(128, 71);
-            progressVoltageV.Maximum = 300;
-            progressVoltageV.Name = "progressVoltageV";
-            progressVoltageV.Size = new Size(90, 20);
-            progressVoltageV.Style = ProgressBarStyle.Continuous;
-            progressVoltageV.TabIndex = 2;
-            // 
-            // progressVoltageU
-            // 
-            progressVoltageU.Location = new Point(28, 71);
-            progressVoltageU.Maximum = 300;
-            progressVoltageU.Name = "progressVoltageU";
-            progressVoltageU.Size = new Size(90, 20);
-            progressVoltageU.Style = ProgressBarStyle.Continuous;
-            progressVoltageU.TabIndex = 1;
-            progressVoltageU.Value = 100;
-            // 
-            // lblProgressVoltage
-            // 
-            lblProgressVoltage.Font = new Font("微软雅黑", 11F);
-            lblProgressVoltage.Location = new Point(18, 46);
-            lblProgressVoltage.Name = "lblProgressVoltage";
-            lblProgressVoltage.Size = new Size(120, 20);
-            lblProgressVoltage.TabIndex = 0;
-            lblProgressVoltage.Text = "电压进度 (U-V-W):";
-            // 
             // grpControl
             // 
             grpControl.BackColor = Color.Transparent;
+            grpControl.Controls.Add(btnClose);
             grpControl.Controls.Add(uiLine1);
             grpControl.Controls.Add(btnEmergencyStop);
             grpControl.Controls.Add(btnQuickStart);
@@ -542,21 +484,32 @@
             grpControl.Controls.Add(btnSetControlMode);
             grpControl.Controls.Add(cmbControlMode);
             grpControl.Controls.Add(lblControlMode);
-            grpControl.FillColor = Color.White;
-            grpControl.FillColor2 = Color.White;
             grpControl.Font = new Font("微软雅黑", 9F, FontStyle.Bold, GraphicsUnit.Point, 134);
-            grpControl.Location = new Point(12, 334);
+            grpControl.Location = new Point(14, 334);
             grpControl.Margin = new Padding(4, 5, 4, 5);
             grpControl.MinimumSize = new Size(1, 1);
             grpControl.Name = "grpControl";
             grpControl.Padding = new Padding(0, 32, 0, 0);
             grpControl.RectColor = Color.FromArgb(65, 100, 204);
             grpControl.RectDisableColor = Color.FromArgb(65, 100, 204);
-            grpControl.Size = new Size(966, 166);
+            grpControl.Size = new Size(779, 228);
             grpControl.TabIndex = 3;
             grpControl.TabStop = false;
             grpControl.Text = null;
             grpControl.TextAlignment = ContentAlignment.MiddleLeft;
+            // 
+            // btnClose
+            // 
+            btnClose.BackColor = Color.WhiteSmoke;
+            btnClose.Font = new Font("微软雅黑", 11F);
+            btnClose.ForeColor = Color.Black;
+            btnClose.Location = new Point(578, 165);
+            btnClose.Name = "btnClose";
+            btnClose.Size = new Size(120, 50);
+            btnClose.TabIndex = 16;
+            btnClose.Text = "退 出";
+            btnClose.UseVisualStyleBackColor = false;
+            btnClose.Click += btnClose_Click;
             // 
             // uiLine1
             // 
@@ -567,44 +520,45 @@
             uiLine1.Location = new Point(21, 11);
             uiLine1.MinimumSize = new Size(1, 1);
             uiLine1.Name = "uiLine1";
-            uiLine1.Size = new Size(929, 29);
+            uiLine1.Size = new Size(755, 29);
             uiLine1.TabIndex = 15;
             uiLine1.Text = "参数设置";
             uiLine1.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // btnEmergencyStop
             // 
-            btnEmergencyStop.BackColor = Color.Red;
+            btnEmergencyStop.BackColor = Color.WhiteSmoke;
             btnEmergencyStop.Font = new Font("微软雅黑", 11F);
-            btnEmergencyStop.ForeColor = Color.White;
-            btnEmergencyStop.Location = new Point(860, 53);
+            btnEmergencyStop.ForeColor = Color.Black;
+            btnEmergencyStop.Location = new Point(408, 165);
             btnEmergencyStop.Name = "btnEmergencyStop";
-            btnEmergencyStop.Size = new Size(80, 50);
+            btnEmergencyStop.Size = new Size(120, 50);
             btnEmergencyStop.TabIndex = 14;
-            btnEmergencyStop.Text = "紧急停止";
+            btnEmergencyStop.Text = "电源停止";
             btnEmergencyStop.UseVisualStyleBackColor = false;
             btnEmergencyStop.Click += BtnEmergencyStop_Click;
             // 
             // btnQuickStart
             // 
-            btnQuickStart.BackColor = Color.LightGreen;
+            btnQuickStart.BackColor = Color.WhiteSmoke;
             btnQuickStart.Font = new Font("微软雅黑", 11F);
-            btnQuickStart.Location = new Point(734, 53);
+            btnQuickStart.ForeColor = Color.Black;
+            btnQuickStart.Location = new Point(238, 165);
             btnQuickStart.Name = "btnQuickStart";
             btnQuickStart.Size = new Size(120, 50);
             btnQuickStart.TabIndex = 13;
-            btnQuickStart.Text = "快速启动\r\n(电脑控制+低档)";
+            btnQuickStart.Text = "电源启动";
             btnQuickStart.UseVisualStyleBackColor = false;
             btnQuickStart.Click += BtnQuickStart_Click;
             // 
             // btnReset
             // 
-            btnReset.BackColor = Color.Orange;
+            btnReset.BackColor = Color.WhiteSmoke;
             btnReset.Font = new Font("微软雅黑", 11F);
-            btnReset.ForeColor = Color.White;
-            btnReset.Location = new Point(627, 73);
+            btnReset.ForeColor = Color.Black;
+            btnReset.Location = new Point(68, 165);
             btnReset.Name = "btnReset";
-            btnReset.Size = new Size(101, 30);
+            btnReset.Size = new Size(120, 50);
             btnReset.TabIndex = 12;
             btnReset.Text = "电源复位";
             btnReset.UseVisualStyleBackColor = false;
@@ -614,19 +568,20 @@
             // 
             btnSetFrequency.BackColor = Color.LightGreen;
             btnSetFrequency.Font = new Font("微软雅黑", 11F);
-            btnSetFrequency.Location = new Point(548, 99);
+            btnSetFrequency.Location = new Point(601, 99);
+            btnSetFrequency.MinimumSize = new Size(1, 1);
             btnSetFrequency.Name = "btnSetFrequency";
             btnSetFrequency.Size = new Size(60, 27);
             btnSetFrequency.TabIndex = 11;
             btnSetFrequency.Text = "设置";
-            btnSetFrequency.UseVisualStyleBackColor = false;
+            btnSetFrequency.TipsFont = new Font("宋体", 9F, FontStyle.Regular, GraphicsUnit.Point, 134);
             btnSetFrequency.Click += BtnSetFrequency_Click;
             // 
             // numFrequency
             // 
             numFrequency.DecimalPlaces = 1;
             numFrequency.Font = new Font("微软雅黑", 11F);
-            numFrequency.Location = new Point(398, 97);
+            numFrequency.Location = new Point(451, 97);
             numFrequency.Maximum = new decimal(new int[] { 70, 0, 0, 0 });
             numFrequency.Minimum = new decimal(new int[] { 40, 0, 0, 0 });
             numFrequency.Name = "numFrequency";
@@ -639,7 +594,7 @@
             // 
             lblFrequencySet.Font = new Font("微软雅黑", 11F);
             lblFrequencySet.ForeColor = Color.FromArgb(48, 48, 48);
-            lblFrequencySet.Location = new Point(324, 99);
+            lblFrequencySet.Location = new Point(377, 99);
             lblFrequencySet.Name = "lblFrequencySet";
             lblFrequencySet.Size = new Size(80, 23);
             lblFrequencySet.TabIndex = 9;
@@ -649,7 +604,7 @@
             // btnSetVoltage
             // 
             btnSetVoltage.Font = new Font("微软雅黑", 11F);
-            btnSetVoltage.Location = new Point(238, 99);
+            btnSetVoltage.Location = new Point(252, 99);
             btnSetVoltage.MinimumSize = new Size(1, 1);
             btnSetVoltage.Name = "btnSetVoltage";
             btnSetVoltage.Size = new Size(60, 27);
@@ -662,10 +617,10 @@
             // 
             numVoltage.DecimalPlaces = 1;
             numVoltage.Font = new Font("微软雅黑", 11F);
-            numVoltage.Location = new Point(111, 101);
+            numVoltage.Location = new Point(110, 101);
             numVoltage.Maximum = new decimal(new int[] { 300, 0, 0, 0 });
             numVoltage.Name = "numVoltage";
-            numVoltage.Size = new Size(120, 27);
+            numVoltage.Size = new Size(129, 27);
             numVoltage.TabIndex = 7;
             numVoltage.TextAlign = HorizontalAlignment.Center;
             numVoltage.Value = new decimal(new int[] { 120, 0, 0, 0 });
@@ -674,7 +629,7 @@
             // 
             lblVoltageSet.Font = new Font("微软雅黑", 11F);
             lblVoltageSet.ForeColor = Color.FromArgb(48, 48, 48);
-            lblVoltageSet.Location = new Point(30, 103);
+            lblVoltageSet.Location = new Point(29, 103);
             lblVoltageSet.Name = "lblVoltageSet";
             lblVoltageSet.Size = new Size(85, 23);
             lblVoltageSet.TabIndex = 6;
@@ -684,7 +639,7 @@
             // btnSetOutputRange
             // 
             btnSetOutputRange.Font = new Font("微软雅黑", 11F);
-            btnSetOutputRange.Location = new Point(548, 49);
+            btnSetOutputRange.Location = new Point(601, 49);
             btnSetOutputRange.MinimumSize = new Size(1, 1);
             btnSetOutputRange.Name = "btnSetOutputRange";
             btnSetOutputRange.Size = new Size(60, 27);
@@ -703,7 +658,7 @@
             cmbOutputRange.ItemHoverColor = Color.FromArgb(155, 200, 255);
             cmbOutputRange.Items.AddRange(new object[] { "高档0-300V", "低档0-150V" });
             cmbOutputRange.ItemSelectForeColor = Color.FromArgb(235, 243, 255);
-            cmbOutputRange.Location = new Point(398, 51);
+            cmbOutputRange.Location = new Point(451, 51);
             cmbOutputRange.Margin = new Padding(4, 5, 4, 5);
             cmbOutputRange.MinimumSize = new Size(63, 0);
             cmbOutputRange.Name = "cmbOutputRange";
@@ -720,7 +675,7 @@
             // 
             lblOutputRange.Font = new Font("微软雅黑", 11F);
             lblOutputRange.ForeColor = Color.FromArgb(48, 48, 48);
-            lblOutputRange.Location = new Point(324, 53);
+            lblOutputRange.Location = new Point(377, 53);
             lblOutputRange.Name = "lblOutputRange";
             lblOutputRange.Size = new Size(80, 23);
             lblOutputRange.TabIndex = 3;
@@ -730,7 +685,7 @@
             // btnSetControlMode
             // 
             btnSetControlMode.Font = new Font("微软雅黑", 12F);
-            btnSetControlMode.Location = new Point(238, 51);
+            btnSetControlMode.Location = new Point(252, 51);
             btnSetControlMode.MinimumSize = new Size(1, 1);
             btnSetControlMode.Name = "btnSetControlMode";
             btnSetControlMode.Size = new Size(60, 27);
@@ -749,14 +704,14 @@
             cmbControlMode.ItemHoverColor = Color.FromArgb(155, 200, 255);
             cmbControlMode.Items.AddRange(new object[] { "本机控制", "电脑控制" });
             cmbControlMode.ItemSelectForeColor = Color.FromArgb(235, 243, 255);
-            cmbControlMode.Location = new Point(111, 51);
+            cmbControlMode.Location = new Point(110, 51);
             cmbControlMode.Margin = new Padding(4, 5, 4, 5);
             cmbControlMode.MinimumSize = new Size(63, 0);
             cmbControlMode.Name = "cmbControlMode";
             cmbControlMode.Padding = new Padding(0, 0, 30, 2);
             cmbControlMode.RectColor = Color.FromArgb(65, 100, 204);
             cmbControlMode.RectDisableColor = Color.FromArgb(65, 100, 204);
-            cmbControlMode.Size = new Size(120, 28);
+            cmbControlMode.Size = new Size(129, 25);
             cmbControlMode.SymbolSize = 24;
             cmbControlMode.TabIndex = 1;
             cmbControlMode.TextAlignment = ContentAlignment.MiddleLeft;
@@ -766,7 +721,7 @@
             // 
             lblControlMode.Font = new Font("微软雅黑", 11F);
             lblControlMode.ForeColor = Color.FromArgb(48, 48, 48);
-            lblControlMode.Location = new Point(30, 53);
+            lblControlMode.Location = new Point(29, 53);
             lblControlMode.Name = "lblControlMode";
             lblControlMode.Size = new Size(85, 23);
             lblControlMode.TabIndex = 0;
@@ -776,22 +731,24 @@
             // frmPowerSupplyForm
             // 
             AutoScaleMode = AutoScaleMode.None;
-            ClientSize = new Size(996, 515);
+            ClientSize = new Size(806, 587);
+            ControlBox = false;
             Controls.Add(grpControl);
-            Controls.Add(grpProgress);
             Controls.Add(grpDataDisplay);
             Controls.Add(grpConnection);
             Font = new Font("微软雅黑", 9F, FontStyle.Regular, GraphicsUnit.Point, 134);
             Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
+            MinimizeBox = false;
             Name = "frmPowerSupplyForm";
+            RectColor = Color.FromArgb(65, 100, 204);
             ShowIcon = false;
             Text = "调频电源监控系统";
+            TitleColor = Color.FromArgb(65, 100, 204);
             TitleFont = new Font("微软雅黑", 13F);
             ZoomScaleRect = new Rectangle(15, 15, 996, 531);
             grpConnection.ResumeLayout(false);
             grpDataDisplay.ResumeLayout(false);
-            grpProgress.ResumeLayout(false);
             grpControl.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)numFrequency).EndInit();
             ((System.ComponentModel.ISupportInitialize)numVoltage).EndInit();
@@ -802,8 +759,14 @@
         #endregion
 
         private UILine uiLine1;
-        private UILabel uiLabel1;
         private UILine uiLine2;
-        private UILine uiLine3;
+        private UILabel lbTotalVoltage;
+        private UILabel lbTotalCurrent;
+        private UILabel lbTotalFactor;
+        private UILabel lblFactorW;
+        private UILabel lblFactorV;
+        private UILabel lblFactorU;
+        private UILabel uiLabel8;
+        private Button btnClose;
     }
 }

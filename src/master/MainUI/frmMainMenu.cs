@@ -100,24 +100,6 @@ public partial class frmMainMenu : Form
     }
 
     /// <summary>
-    /// 初始化权限
-    /// </summary>
-    private void InitializePermissions()
-    {
-        try
-        {
-            var currentUser = NewUsers.NewUserInfo;
-            PermissionHelper.Initialize(currentUser.ID, currentUser.Role_ID);
-            PermissionHelper.ApplyPermissionToControl(this, currentUser.ID);
-        }
-        catch (Exception ex)
-        {
-            NlogHelper.Default.Error($"初始化权限失败：{ex.Message}");
-            throw;
-        }
-    }
-
-    /// <summary>
     /// 初始化HMI
     /// </summary>
     private void InitializeHMI()
@@ -207,12 +189,10 @@ public partial class frmMainMenu : Form
         try
         {
             var userId = NewUsers.NewUserInfo.ID;
-            if (IsAdminUser(userId))
-            {
-                ConfigureAdminNodes(main);
-                return;
-            }
-            ConfigureRegularUserNodes(main, userId);
+
+            ConfigureAdminNodes(main);
+            return;
+
         }
         catch (Exception ex)
         {
@@ -421,18 +401,13 @@ public partial class frmMainMenu : Form
 
         // 更新用户信息
         var userInfo = NewUsers.NewUserInfo;
-        tslblUser.Text = $"当前登录用户： {userInfo.Username}  当前权限：{userInfo.Describe} ";
+        tslblUser.Text = $"当前登录用户： {userInfo.Username} ";
 
         // 更新PLC状态
-        //tslblPLC.Text = _opcStatus.NoError ? " PLC连接正常 " : " PLC连接失败 ";
-        //tslblPLC.BackColor = _opcStatus.NoError ? Color.FromArgb(110, 190, 40) : Color.Salmon;
-        //if (_opcStatus.Simulated) tslblPLC.Text += " 仿真模式 ";
+        tslblPLC.Text = _opcStatus.NoError ? " 调频电源连接正常 " : " 调频电源连接失败 ";
+        tslblPLC.BackColor = _opcStatus.NoError ? Color.FromArgb(110, 190, 40) : Color.Salmon;
+        if (_opcStatus.Simulated) tslblPLC.Text += " 仿真模式 ";
 
-        tslblFrequency.Text= _hmi.IsPowerConnected ? " 调频电源连接正常 " : " 调频电源连接失败 ";
-        tslblFrequency.BackColor = _hmi.IsPowerConnected ? Color.FromArgb(110, 190, 40) : Color.Salmon;
-
-        //var SysTime = $"系统运行时间：{TimeTrackingService.FormatTimeSpan(_timeTrackingService.GetSystemUptime())}";
-        //var RunTime = $"软件运行时间：{TimeTrackingService.FormatTimeSpan(_timeTrackingService.GetApplicationUptime())}";
     }
 
     private void frmMainMenu_FormClosing(object sender, FormClosingEventArgs e)

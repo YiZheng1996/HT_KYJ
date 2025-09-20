@@ -54,7 +54,13 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="Modules\AIGrp.cs" />
+    <Compile Update="Modules\PowerRead.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Update="Modules\TemperatureGrp.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Modules\PowerControl.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Update="Modules\YL03Grp.cs">

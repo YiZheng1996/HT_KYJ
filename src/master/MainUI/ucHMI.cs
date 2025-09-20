@@ -1,10 +1,7 @@
 ﻿using AntdUI;
 using MainUI.PowerSupplyControl;
 using MainUI.Service;
-using System.IO.Ports;
-using static MainUI.PowerSupplyControl.PowerSupplyProtocol;
 using Label = System.Windows.Forms.Label;
-using Timer = System.Windows.Forms.Timer;
 
 namespace MainUI
 {
@@ -59,8 +56,8 @@ namespace MainUI
                 RegisterTestEventHandlers();
                 // 5. 设置控件初始状态和默认值
                 SetInitialState();
-                // 6. 初始化电源监控系统
-                InitializePowerSupply();
+                //电源柜断电重启后默认本地控制为3，需要手动写入默认远程控制
+                OPCHelper.PowerControlGrp[0] = 2;
             }
             catch (Exception ex)
             {
@@ -236,7 +233,20 @@ namespace MainUI
         // 温度传感器
         public void TemperaturevalueGrpChaned(object sender, int index, double value)
         {
-            LabTemperature01.Text = value.ToString("f1");
+            switch (index)
+            {
+                case 0:
+                    LabTemperature01.Text = value.ToString("f1");
+                    break;
+                case 1:
+                    LabTemperature02.Text = value.ToString("f1");
+                    break;
+                case 2:
+                    LabTemperature03.Text = value.ToString("f1");
+                    break;
+                default:
+                    break;
+            }
         }
 
 
@@ -608,119 +618,11 @@ namespace MainUI
 
         #endregion
 
-        #region 电源控制公开接口方法
-      
-        /// <summary>
-        /// 连接指定串口的电源设备
-        /// </summary>
-        /// <param name="comPort">串口号，如COM1、COM2等</param>
-        /// <returns>连接是否成功</returns>
-        public async Task<bool> ConnectPowerSupplyAsync(string comPort)
+        private void BtnFMPowerSupply_Click(object sender, EventArgs e)
         {
-            return await _powerService.ConnectAsync(comPort);
+            ShowPowerControlDialog();
         }
 
-        /// <summary>
-        /// 断开电源设备连接
-        /// </summary>
-        public async Task DisconnectPowerSupplyAsync()
-        {
-            await _powerService.DisconnectAsync();
-        }
-
-        /// <summary>
-        /// 获取当前电源数据的副本
-        /// 返回最新读取到的所有电源参数，包括电压、电流、功率、频率等
-        /// </summary>
-        /// <returns>电源数据对象，如果未连接则IsConnected为false</returns>
-        public PowerSupplyData GetPowerData()
-        {
-            // 返回当前数据的副本，避免外部修改影响内部状态
-            return _powerService.CurrentData;
-        }
-
-        /// <summary>
-        /// 获取电源设备连接状态
-        /// </summary>
-        /// <returns>true表示已连接且可正常通信，false表示未连接或通信异常</returns>
-        public bool IsPowerConnected => _powerService.IsConnected;
-
-        /// <summary>
-        /// 获取当前连接的串口号
-        /// </summary>
-        /// <returns>串口号字符串，如COM1；未连接时返回空字符串</returns>
-        public string GetCurrentComPort() => _powerService.CurrentComPort;
-
-        /// <summary>
-        /// 设置电源控制模式
-        /// </summary>
-        /// <param name="isRemote">true为电脑控制模式，false为本机控制模式</param>
-        /// <returns>设置是否成功</returns>
-        public async Task<bool> SetControlModeAsync(bool isRemote)
-        {
-            var mode = isRemote ? ControlMode.Remote : ControlMode.Local;
-            return await _powerService.SetControlModeAsync(mode);
-        }
-
-        /// <summary>
-        /// 设置输出档位
-        /// </summary>
-        /// <param name="isHighRange">true为高档输出，false为低档输出</param>
-        /// <returns>设置是否成功</returns>
-        public async Task<bool> SetOutputRangeAsync(bool isHighRange)
-        {
-            var range = isHighRange ? OutputRange.High : OutputRange.Low;
-            return await _powerService.SetOutputRangeAsync(range);
-        }
-
-        /// <summary>
-        /// 设置输出电压给定值
-        /// </summary>
-        /// <param name="voltage">电压值</param>
-        /// <returns>设置是否成功</returns>
-        public async Task<bool> SetVoltageAsync(double voltage, OutputRange range = OutputRange.Low)
-        {
-            return await _powerService.SetVoltageAsync(voltage,range);
-        }
-
-        /// <summary>
-        /// 设置输出频率给定值
-        /// </summary>
-        /// <param name="frequency">频率值</param>
-        /// <returns>设置是否成功</returns>
-        public async Task<bool> SetFrequencyAsync(double frequency)
-        {
-            return await _powerService.SetFrequencyAsync(frequency);
-        }
-
-        /// <summary>
-        /// 执行电源复位操作
-        /// </summary>
-        /// <returns>复位是否成功</returns>
-        public async Task<bool> PowerResetAsync()
-        {
-            return await _powerService.PowerResetAsync();
-        }
-
-        /// <summary>
-        /// 快速启动电源 - 设置为电脑控制模式并切换到低档输出
-        /// </summary>
-        /// <returns>快速启动是否成功</returns>
-        public async Task<bool> QuickStartPowerAsync()
-        {
-            return await _powerService.QuickStartAsync();
-        }
-
-        /// <summary>
-        /// 紧急停止电源 - 复位电源并切换到本机控制
-        /// </summary>
-        /// <returns>紧急停止是否成功</returns>
-        public async Task<bool> EmergencyStopPowerAsync()
-        {
-            return await _powerService.EmergencyStopAsync();
-        }
-
-     
         /// <summary>
         /// 显示电源控制弹窗对话框
         /// 提供完整的电源监控和控制界面
@@ -729,9 +631,7 @@ namespace MainUI
         {
             try
             {
-                // 传递电源服务实例给对话框，而不是传递this
-                using var dialog = new frmPowerSupplyForm(_powerService);
-                // 使用项目统一的弹窗显示方法，支持遮罩效果
+                using var dialog = new frmPowerSupplyForm();
                 VarHelper.ShowDialogWithOverlay(FindForm(), dialog);
             }
             catch (Exception ex)
@@ -740,198 +640,6 @@ namespace MainUI
                 MessageBox.Show($"打开电源控制面板失败: {ex.Message}",
                     "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        /// <summary>
-        /// 获取系统中所有可用的串口列表
-        /// 用于用户选择连接的串口
-        /// </summary>
-        /// <returns>可用串口名称数组</returns>
-        public string[] GetAvailableComPorts()
-        {
-            try
-            {
-                return SerialPort.GetPortNames();
-            }
-            catch (Exception ex)
-            {
-                NlogHelper.Default.Error($"获取可用串口列表失败: {ex.Message}");
-                return new string[0]; // 返回空数组而不是null
-            }
-        }
-        #endregion
-
-        #region 电源服务相关
-        /// <summary>
-        /// 电源服务实例，负责所有电源相关的操作
-        /// 使用单例模式确保全局统一管理
-        /// </summary>
-        private PowerSupplyService _powerService;
-        #endregion
-
-        #region 调频电源相关
-
-        // <summary>
-        /// 初始化电源监控服务
-        /// </summary>
-        private void InitializePowerSupply()
-        {
-            try
-            {
-                NlogHelper.Default.Info("开始初始化电源监控系统");
-
-                // 获取电源服务实例
-                _powerService = PowerSupplyService.Instance;
-
-                // 订阅电源服务事件
-                _powerService.DataUpdated += OnPowerDataUpdated;
-                _powerService.ConnectionStatusChanged += OnPowerConnectionStatusChanged;
-                _powerService.OperationCompleted += OnPowerOperationCompleted;
-
-                // 从INI配置文件读取串口号并尝试自动连接
-                string configuredComPort = GetPowerSupplyComPortFromConfig();
-
-                if (!string.IsNullOrEmpty(configuredComPort))
-                {
-                    NlogHelper.Default.Info($"从配置文件读取到电源串口号: {configuredComPort}");
-
-                    // 异步尝试连接配置的串口
-                    _ = Task.Run(async () =>
-                    {
-                        bool connectResult = await _powerService.ConnectAsync(configuredComPort);
-                        if (connectResult)
-                        {
-                            NlogHelper.Default.Info($"电源自动连接成功: {configuredComPort}");
-                        }
-                        else
-                        {
-                            NlogHelper.Default.Warn($"电源自动连接失败: {configuredComPort}，可稍后手动连接");
-                        }
-                    });
-                }
-                else
-                {
-                    NlogHelper.Default.Info("未配置电源串口号，跳过自动连接");
-                }
-
-                NlogHelper.Default.Info("电源监控系统初始化完成");
-            }
-            catch (Exception ex)
-            {
-                // 电源初始化失败不应影响整个HMI系统启动，只记录错误
-                NlogHelper.Default.Error($"电源监控系统初始化失败: {ex.Message}");
-            }
-        }
-
-        //TODO:暂时时间不够充裕，暂时固定COM1
-        /// <summary>
-        /// 从INI配置文件读取电源串口号
-        /// </summary>
-        /// <returns>配置的串口号，如COM1、COM2等；如果未配置则返回空字符串</returns>
-        private string GetPowerSupplyComPortFromConfig()
-        {
-            try
-            {
-                string comPort = "COM1";
-                return comPort;
-            }
-            catch (Exception ex)
-            {
-                NlogHelper.Default.Error($"读取电源串口配置失败: {ex.Message}");
-                return "";  // 当前返回空字符串，表示未配置
-            }
-        }
-
-       
-        #endregion
-
-        #region 电源服务事件处理
-        /// <summary>
-        /// 处理电源数据更新事件
-        /// 当电源服务读取到新数据时会触发此事件
-        /// </summary>
-        /// <param name="data">最新的电源数据</param>
-        private void OnPowerDataUpdated(PowerSupplyData data)
-        {
-            try
-            {
-                // 确保在UI线程中更新界面
-                if (InvokeRequired)
-                {
-                    Invoke(new Action<PowerSupplyData>(OnPowerDataUpdated), data);
-                    return;
-                }
-
-                // 在这里可以添加UI更新逻辑，比如更新状态指示灯、数据显示等
-                // 例如：更新电源状态指示
-                // lblPowerStatus.Text = data.IsConnected ? "已连接" : "未连接";
-                // lblPowerStatus.ForeColor = data.IsConnected ? Color.Green : Color.Red;
-
-                NlogHelper.Default.Debug($"电源数据已更新 - 频率:{data.Frequency:F1}Hz, 总功率:{data.TotalPower:F0}W");
-            }
-            catch (Exception ex)
-            {
-                NlogHelper.Default.Error($"处理电源数据更新事件时发生错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 处理电源连接状态变化事件
-        /// </summary>
-        /// <param name="isConnected">连接状态</param>
-        private void OnPowerConnectionStatusChanged(bool isConnected)
-        {
-            try
-            {
-                // 确保在UI线程中更新界面
-                if (InvokeRequired)
-                {
-                    Invoke(new Action<bool>(OnPowerConnectionStatusChanged), isConnected);
-                    return;
-                }
-
-                // 在这里可以添加连接状态变化时的UI更新逻辑
-                // 例如：更新连接状态显示、启用/禁用相关控件等
-
-                NlogHelper.Default.Info($"电源连接状态变化: {(isConnected ? "已连接" : "已断开")}");
-            }
-            catch (Exception ex)
-            {
-                NlogHelper.Default.Error($"处理电源连接状态变化事件时发生错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 处理电源操作完成事件
-        /// </summary>
-        /// <param name="operation">操作描述</param>
-        /// <param name="success">操作结果</param>
-        private void OnPowerOperationCompleted(string operation, bool success)
-        {
-            try
-            {
-                // 确保在UI线程中更新界面
-                if (InvokeRequired)
-                {
-                    Invoke(new Action<string, bool>(OnPowerOperationCompleted), operation, success);
-                    return;
-                }
-
-                // 在这里可以添加操作完成后的UI反馈逻辑
-                // 例如：显示操作结果提示、更新按钮状态等
-
-                NlogHelper.Default.Info($"电源操作完成: {operation} - {(success ? "成功" : "失败")}");
-            }
-            catch (Exception ex)
-            {
-                NlogHelper.Default.Error($"处理电源操作完成事件时发生错误: {ex.Message}");
-            }
-        }
-        #endregion
-
-        private void BtnFMPowerSupply_Click(object sender, EventArgs e)
-        {
-            ShowPowerControlDialog();
         }
     }
 }

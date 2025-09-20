@@ -18,6 +18,9 @@ namespace MainUI.CurrencyHelper
         public static OPCDriver opcYL02 = new();
         public static OPCDriver opcYL03 = new();
         public static OPCDriver opcTemperature = new();
+        public static OPCDriver opcPowerRead = new();
+        public static OPCDriver opcPowerControl = new();
+
         #endregion
 
         #region opcGroup
@@ -35,6 +38,8 @@ namespace MainUI.CurrencyHelper
         public static YL02Grp YL02grp;
         public static YL03Grp YL03grp;
         public static TemperatureGrp Temperaturegrp;
+        public static PowerRead PowerReadGrp;
+        public static PowerControl PowerControlGrp;
         #endregion
 
         static OPCHelper()
@@ -69,6 +74,10 @@ namespace MainUI.CurrencyHelper
             opcYL03.Prefix = "Pressure.YL03.";
             opcTemperature.ServerName = kepServerName;
             opcTemperature.Prefix = "Pressure.Temperature.";
+            opcPowerRead.ServerName = kepServerName;
+            opcPowerRead.Prefix = "PowerCabinet.PowerRead.";
+            opcPowerControl.ServerName = kepServerName;
+            opcPowerControl.Prefix = "PowerCabinet.PowerControl.";
         }
 
         /// <summary>
@@ -81,14 +90,16 @@ namespace MainUI.CurrencyHelper
             //opcAIGroup.Connect();
             //opcAOGroup.Connect();
             //opcTestConGroup.Connect();
-            //opcStatusGroup.Connect();
 
+            opcStatusGroup.Connect();
             opcWSD.Connect();
             opcHJYL.Connect();
             opcYL01.Connect();
             opcYL02.Connect();
             opcYL03.Connect();
             opcTemperature.Connect();
+            opcPowerControl.Connect();
+            opcPowerRead.Connect();
         }
 
         /// <summary>
@@ -101,7 +112,7 @@ namespace MainUI.CurrencyHelper
             opcAIGroup.Close();
             opcAOGroup.Close();
             //opcTestConGroup.Close();
-            //opcStatusGroup.Close();
+            opcStatusGroup.Close();
 
             opcWSD.Close();
             opcHJYL.Close();
@@ -109,6 +120,8 @@ namespace MainUI.CurrencyHelper
             opcYL02.Close();
             opcYL03.Close();
             opcTemperature.Close();
+            opcPowerControl.Close();
+            opcPowerRead.Close();
         }
 
 
@@ -120,13 +133,15 @@ namespace MainUI.CurrencyHelper
             DOgrp = new DOGrp();
             //TestCongrp = new TestConGrp();
             //plcc = new PLCCalibration();
-            //opcStatus = new OpcStatusGrp();
+            opcStatus = new OpcStatusGrp();
             WSDgrp = new WSDGrp();
             HJYLGrpgrp = new HJYLGrp();
             YL01grp = new YL01Grp();
             YL02grp = new YL02Grp();
             YL03grp = new YL03Grp();
             Temperaturegrp = new TemperatureGrp();
+            PowerControlGrp = new PowerControl();
+            PowerReadGrp = new PowerRead();
 
             WSDgrp.Init();
             HJYLGrpgrp.Init();
@@ -134,8 +149,10 @@ namespace MainUI.CurrencyHelper
             YL02grp.Init();
             YL03grp.Init();
             Temperaturegrp.Init();
+            PowerControlGrp.Init();
+            PowerReadGrp.Init();
+            opcStatus.Init();
 
-            //opcStatus.Init();
             //AIgrp.Init();
             //AOgrp.Init();
             //DIgrp.Init();
