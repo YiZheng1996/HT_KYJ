@@ -148,7 +148,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NLog" Version="5.3.4" />
     <PackageReference Include="NLog.Database" Version="5.3.4" />
-    <PackageReference Include="ReportNuget" Version="1.0.1" />
     <PackageReference Include="SunnyUI" Version="3.8.5" />
     <PackageReference Include="System.Data.OleDb" Version="8.0.1" />
     <PackageReference Include="System.IO.Ports" Version="9.0.2" />
@@ -169,6 +168,15 @@
       <HintPath>..\Lib\Interop.OPCAutomation.dll</HintPath>
       <EmbedInteropTypes></EmbedInteropTypes>
       <Private></Private>
+    </Reference>
+    <Reference Include="Microsoft.Office.Interop.Excel">
+      <HintPath>..\Lib\Report\Microsoft.Office.Interop.Excel.dll</HintPath>
+    </Reference>
+    <Reference Include="office">
+      <HintPath>..\Lib\Report\office.dll</HintPath>
+    </Reference>
+    <Reference Include="Report">
+      <HintPath>..\Lib\Report\Report.dll</HintPath>
     </Reference>
     <Reference Include="rw3">
       <HintPath>..\Lib\DSL_DLL\rw3.dll</HintPath>

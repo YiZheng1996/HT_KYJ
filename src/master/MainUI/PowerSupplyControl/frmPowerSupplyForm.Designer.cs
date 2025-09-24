@@ -73,9 +73,6 @@
             lblFaultStatus = new UILabel();
             grpDataDisplay = new UIPanel();
             lbTotalFactor = new UILabel();
-            lblFactorW = new UILabel();
-            lblFactorV = new UILabel();
-            lblFactorU = new UILabel();
             uiLabel8 = new UILabel();
             lbTotalVoltage = new UILabel();
             lbTotalCurrent = new UILabel();
@@ -151,9 +148,6 @@
             // grpDataDisplay
             // 
             grpDataDisplay.Controls.Add(lbTotalFactor);
-            grpDataDisplay.Controls.Add(lblFactorW);
-            grpDataDisplay.Controls.Add(lblFactorV);
-            grpDataDisplay.Controls.Add(lblFactorU);
             grpDataDisplay.Controls.Add(uiLabel8);
             grpDataDisplay.Controls.Add(lbTotalVoltage);
             grpDataDisplay.Controls.Add(lbTotalCurrent);
@@ -191,51 +185,12 @@
             lbTotalFactor.BorderStyle = BorderStyle.Fixed3D;
             lbTotalFactor.Font = new Font("微软雅黑", 11F);
             lbTotalFactor.ForeColor = Color.FromArgb(48, 48, 48);
-            lbTotalFactor.Location = new Point(433, 159);
+            lbTotalFactor.Location = new Point(106, 159);
             lbTotalFactor.Name = "lbTotalFactor";
             lbTotalFactor.Size = new Size(148, 23);
             lbTotalFactor.TabIndex = 23;
             lbTotalFactor.Text = "总因素: 0";
             lbTotalFactor.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // lblFactorW
-            // 
-            lblFactorW.BackColor = Color.DarkTurquoise;
-            lblFactorW.BorderStyle = BorderStyle.Fixed3D;
-            lblFactorW.Font = new Font("微软雅黑", 11F);
-            lblFactorW.ForeColor = Color.FromArgb(48, 48, 48);
-            lblFactorW.Location = new Point(324, 159);
-            lblFactorW.Name = "lblFactorW";
-            lblFactorW.Size = new Size(99, 23);
-            lblFactorW.TabIndex = 22;
-            lblFactorW.Text = "W: 0";
-            lblFactorW.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // lblFactorV
-            // 
-            lblFactorV.BackColor = Color.DarkTurquoise;
-            lblFactorV.BorderStyle = BorderStyle.Fixed3D;
-            lblFactorV.Font = new Font("微软雅黑", 11F);
-            lblFactorV.ForeColor = Color.FromArgb(48, 48, 48);
-            lblFactorV.Location = new Point(215, 159);
-            lblFactorV.Name = "lblFactorV";
-            lblFactorV.Size = new Size(99, 23);
-            lblFactorV.TabIndex = 21;
-            lblFactorV.Text = "V: 0";
-            lblFactorV.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // lblFactorU
-            // 
-            lblFactorU.BackColor = Color.DarkTurquoise;
-            lblFactorU.BorderStyle = BorderStyle.Fixed3D;
-            lblFactorU.Font = new Font("微软雅黑", 11F);
-            lblFactorU.ForeColor = Color.FromArgb(48, 48, 48);
-            lblFactorU.Location = new Point(106, 159);
-            lblFactorU.Name = "lblFactorU";
-            lblFactorU.Size = new Size(99, 23);
-            lblFactorU.TabIndex = 20;
-            lblFactorU.Text = "U: 0";
-            lblFactorU.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // uiLabel8
             // 
@@ -583,7 +538,6 @@
             numFrequency.Font = new Font("微软雅黑", 11F);
             numFrequency.Location = new Point(451, 97);
             numFrequency.Maximum = new decimal(new int[] { 70, 0, 0, 0 });
-            numFrequency.Minimum = new decimal(new int[] { 40, 0, 0, 0 });
             numFrequency.Name = "numFrequency";
             numFrequency.Size = new Size(129, 27);
             numFrequency.TabIndex = 10;
@@ -618,12 +572,12 @@
             numVoltage.DecimalPlaces = 1;
             numVoltage.Font = new Font("微软雅黑", 11F);
             numVoltage.Location = new Point(110, 101);
-            numVoltage.Maximum = new decimal(new int[] { 300, 0, 0, 0 });
+            numVoltage.Maximum = new decimal(new int[] { 520, 0, 0, 0 });
             numVoltage.Name = "numVoltage";
             numVoltage.Size = new Size(129, 27);
             numVoltage.TabIndex = 7;
             numVoltage.TextAlign = HorizontalAlignment.Center;
-            numVoltage.Value = new decimal(new int[] { 120, 0, 0, 0 });
+            numVoltage.Value = new decimal(new int[] { 220, 0, 0, 0 });
             // 
             // lblVoltageSet
             // 
@@ -656,7 +610,7 @@
             cmbOutputRange.Font = new Font("微软雅黑", 11F);
             cmbOutputRange.FormattingEnabled = true;
             cmbOutputRange.ItemHoverColor = Color.FromArgb(155, 200, 255);
-            cmbOutputRange.Items.AddRange(new object[] { "高档0-300V", "低档0-150V" });
+            cmbOutputRange.Items.AddRange(new object[] { "高档0-520V", "低档0-260V" });
             cmbOutputRange.ItemSelectForeColor = Color.FromArgb(235, 243, 255);
             cmbOutputRange.Location = new Point(451, 51);
             cmbOutputRange.Margin = new Padding(4, 5, 4, 5);
@@ -753,7 +707,6 @@
             ((System.ComponentModel.ISupportInitialize)numFrequency).EndInit();
             ((System.ComponentModel.ISupportInitialize)numVoltage).EndInit();
             ResumeLayout(false);
-
         }
 
         #endregion
@@ -763,9 +716,6 @@
         private UILabel lbTotalVoltage;
         private UILabel lbTotalCurrent;
         private UILabel lbTotalFactor;
-        private UILabel lblFactorW;
-        private UILabel lblFactorV;
-        private UILabel lblFactorU;
         private UILabel uiLabel8;
         private Button btnClose;
     }

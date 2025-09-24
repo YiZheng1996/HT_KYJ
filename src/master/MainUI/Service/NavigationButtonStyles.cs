@@ -29,7 +29,7 @@
         {
             foreach (var (index, button) in controls.NavigationButtons)
             {
-                var style = index == selectedIndex? Active: Inactive;
+                var style = index == selectedIndex? Inactive :  Active;
                 button.BackColor = style.BackColor;
                 button.ForeColor = style.ForeColor;
             }

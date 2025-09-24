@@ -38,7 +38,7 @@
 
         #region 属性
         public static ParaConfig para { get; set; } = new();
-        public static Report.UcGrid ucGrid { get; set; }
+        //public static Report.UcGrid ucGrid { get; set; }
         public frmMainMenu frm { get; set; }
         public UcHMI Hmi { get; set; }
         public bool IsTesting { get; private set; }

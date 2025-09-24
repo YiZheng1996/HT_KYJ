@@ -98,14 +98,14 @@ namespace MainUI
                     return;
                 }
                 string filename = RecordModel.ReportPath.ToString();
-                string filenameNew = RecordModel.ReportPath + ".xlsx".ToString();
-                if (!File.Exists(filenameNew))
+                if (!File.Exists(filename))
                 {
                     MessageBox.Show("报表文件不存在或已经删除。", "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
+
                 frmDispReport report = new(filename);
-                report.ShowDialog();
+                VarHelper.ShowDialogWithOverlay(this, report);
             }
             catch (Exception ex)
             {

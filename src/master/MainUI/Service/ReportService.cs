@@ -1,55 +1,187 @@
 namespace MainUI.Service
 {
     /// <summary>
-    /// 报表服务类，提供管理报告文件的功能，包括初始化、文件路径生成和保存测试记录
+    /// 报表服务类 - 包含加载、保存和翻页功能
     /// </summary>
-    /// <param name="reportPath">保存路径</param>
-    public class ReportService(string reportPath)
+    public class ReportService(string reportsPath, RW.UI.Controls.Report.RWReport report = null)
     {
-        private string _reportFilename;
-        private string _reportFilePath;
+        // 当前行数
+        public int CurrentRows { get; private set; } = 1;
+        // 最大行数，默认为1000行
+        public int MaxRows { get; set; } = 1000;
 
         /// <summary>
-        /// 初始化报告文件
+        /// 获取报表文件完整路径
         /// </summary>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public string InitializeReportFile(ParaConfig config)
+        /// <param name="fileName">报表文件名</param>
+        /// <returns>完整路径</returns>
+        public string GetReportFilePath(string fileName)
         {
-            _reportFilename = config.RptFile;
-            _reportFilePath = Path.GetFileNameWithoutExtension(_reportFilename);
+            return Path.Combine(reportsPath, fileName);
+        }
 
-            string rptPath = Path.Combine(Application.StartupPath, "reports", _reportFilePath);
+        /// <summary>
+        /// 获取默认报表路径
+        /// </summary>
+        /// <returns>工作报表路径</returns>
+        public static string GetDefaultReportPath()
+        {
+            return Path.Combine(Application.StartupPath, "reports\\");
+        }
 
-            Directory.CreateDirectory(Path.GetDirectoryName(reportPath));
-            File.Copy($"{rptPath}.xlsx", reportPath, true);
+        /// <summary>
+        /// 获取工作报表路径
+        /// </summary>
+        /// <returns>工作报表路径</returns>
+        public static string GetWorkingReportPath()
+        {
+            return Path.Combine(Application.StartupPath, "reports", "report.xlsx");
+        }
 
-            return rptPath;
+        /// <summary>
+        /// 验证报表文件是否存在
+        /// </summary>
+        /// <param name="fileName">报表文件名</param>
+        /// <returns>是否存在</returns>
+        public bool FileExists(string fileName)
+        {
+            string filePath = GetReportFilePath(fileName);
+            return File.Exists(filePath);
+        }
+
+        /// <summary>
+        /// 复制报表文件到工作目录
+        /// </summary>
+        /// <param name="fileName">源文件名</param>
+        /// <param name="targetPath">目标路径</param>
+        public void CopyReportFile(string fileName, string targetPath)
+        {
+            string sourceFile = GetReportFilePath(fileName);
+            File.Copy(sourceFile, targetPath, true);
         }
 
         /// <summary>
         /// 构建保存文件路径
         /// </summary>
         /// <param name="modelName">型号名称</param>
-        /// <returns></returns>
-        public string BuildSaveFilePath(string modelName)
+        /// <returns>保存文件路径</returns>
+        public static string BuildSaveFilePath(string modelName)
         {
-            string rootPath = Path.Combine(Application.StartupPath, "Save");
-            Directory.CreateDirectory(rootPath);
+            string dateFolder = DateTime.Now.ToString("yyyy-MM-dd");
+            string timestamp = DateTime.Now.ToString("HHmmss");
+            string saveDirectory = Path.Combine(Application.StartupPath, "Save", dateFolder);
 
-            string fileName = $"{modelName}_{DateTime.Now:yyyyMMddHHmmss}";
-            return Path.Combine(rootPath, fileName);
+            if (!Directory.Exists(saveDirectory))
+                Directory.CreateDirectory(saveDirectory);
+
+            return Path.Combine(saveDirectory, $"{modelName}_{timestamp}.xlsx");
         }
 
         /// <summary>
         /// 保存测试记录
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="record"></param>
-        public void SaveTestRecord(string filePath, TestRecordModel record)
+        /// <param name="testRecord">测试记录</param>
+        /// <returns>是否保存成功</returns>
+        public static bool SaveTestRecord(TestRecordModel testRecord)
         {
-            var recordBll = new TestRecordNewBLL();
-            recordBll.SaveTestRecord(record);
+            try
+            {
+                TestRecordNewBLL testRecordBLL = new();
+                return testRecordBLL.SaveTestRecord(testRecord);
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error("保存测试记录失败", ex);
+                return false;
+            }
         }
+
+        #region 报表翻页功能
+
+        /// <summary>
+        /// 向上翻页
+        /// </summary>
+        /// <param name="pageSize">翻页行数</param>
+        /// <returns>翻页后的行索引和按钮状态</returns>
+        public (int currentRows, bool upEnabled, bool downEnabled) PageUp(int pageSize)
+        {
+            CurrentRows -= pageSize;
+
+            if (CurrentRows < 1)
+            {
+                CurrentRows = 1;
+            }
+
+            // 执行报表滚动
+            report?.ScrollIndex(CurrentRows);
+
+            return GetPageButtonStates();
+        }
+
+        /// <summary>
+        /// 向下翻页
+        /// </summary>
+        /// <param name="pageSize">翻页行数</param>
+        /// <returns>翻页后的行索引和按钮状态</returns>
+        public (int currentRows, bool upEnabled, bool downEnabled) PageDown(int pageSize)
+        {
+            CurrentRows += pageSize;
+
+            if (CurrentRows > MaxRows)
+            {
+                CurrentRows = 1; // 循环到第一页
+            }
+
+            // 执行报表滚动
+            report?.ScrollIndex(CurrentRows);
+
+            return GetPageButtonStates();
+        }
+
+        /// <summary>
+        /// 跳转到指定行
+        /// </summary>
+        /// <param name="targetRow">目标行</param>
+        /// <returns>跳转后的行索引和按钮状态</returns>
+        public (int currentRows, bool upEnabled, bool downEnabled) ScrollToRow(int targetRow)
+        {
+            if (targetRow < 1) targetRow = 1;
+            if (targetRow > MaxRows) targetRow = MaxRows;
+
+            CurrentRows = targetRow;
+            report?.ScrollIndex(CurrentRows);
+
+            return GetPageButtonStates();
+        }
+
+        /// <summary>
+        /// 重置到第一页
+        /// </summary>
+        /// <returns>重置后的行索引和按钮状态</returns>
+        public (int currentRows, bool upEnabled, bool downEnabled) ResetToFirstPage()
+        {
+            CurrentRows = 1;
+            report?.ScrollIndex(CurrentRows);
+            return GetPageButtonStates();
+        }
+
+        /// <summary>
+        /// 获取翻页按钮的启用状态
+        /// </summary>
+        /// <returns>上翻和下翻按钮的启用状态</returns>
+        private (int currentRows, bool upEnabled, bool downEnabled) GetPageButtonStates()
+        {
+            bool upEnabled = CurrentRows > 1;
+            bool downEnabled = CurrentRows < MaxRows;
+
+            return (CurrentRows, upEnabled, downEnabled);
+        }
+
+        #endregion
+    }
+
+    static class Constants
+    {
+        public const string ReportsPath = @"reports\report.xlsx";
     }
 }

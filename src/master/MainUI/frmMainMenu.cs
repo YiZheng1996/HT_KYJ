@@ -365,6 +365,7 @@ public partial class frmMainMenu : Form
 
         try
         {
+            OPCHelper.PowerControlGrp[4] = 0;
             OPCHelper.Close();
         }
         catch (Exception ex)

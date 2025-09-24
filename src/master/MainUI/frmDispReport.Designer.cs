@@ -30,47 +30,14 @@ namespace MainUI
         /// </summary>
         private void InitializeComponent()
         {
-            grpDI = new UIGroupBox();
-            ucGrid1 = new UcGrid();
             BtnPrint = new UIButton();
             BtnClose = new UIButton();
             btnPageUp = new UIButton();
             btnPageDown = new UIButton();
-            numericUpDown1 = new NumericUpDown();
-            grpDI.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)numericUpDown1).BeginInit();
+            inputNumber = new NumericUpDown();
+            grpReport = new UIPanel();
+            ((System.ComponentModel.ISupportInitialize)inputNumber).BeginInit();
             SuspendLayout();
-            // 
-            // grpDI
-            // 
-            grpDI.Controls.Add(ucGrid1);
-            grpDI.FillColor = Color.White;
-            grpDI.FillColor2 = Color.White;
-            grpDI.Font = new Font("思源黑体 CN Bold", 13F, FontStyle.Bold);
-            grpDI.ForeColor = Color.FromArgb(64, 64, 64);
-            grpDI.ForeDisableColor = Color.FromArgb(64, 64, 64);
-            grpDI.Location = new Point(26, 61);
-            grpDI.Margin = new Padding(4, 5, 4, 5);
-            grpDI.MinimumSize = new Size(1, 1);
-            grpDI.Name = "grpDI";
-            grpDI.Padding = new Padding(0, 32, 0, 0);
-            grpDI.RectColor = Color.White;
-            grpDI.RectDisableColor = Color.White;
-            grpDI.Size = new Size(1218, 859);
-            grpDI.TabIndex = 390;
-            grpDI.Text = "试验报表";
-            grpDI.TextAlignment = ContentAlignment.MiddleCenter;
-            grpDI.TitleAlignment = HorizontalAlignment.Center;
-            // 
-            // ucGrid1
-            // 
-            ucGrid1.Dock = DockStyle.Fill;
-            ucGrid1.Font = new Font("微软雅黑", 12F, FontStyle.Regular, GraphicsUnit.Point, 134);
-            ucGrid1.Location = new Point(0, 32);
-            ucGrid1.Margin = new Padding(4, 5, 4, 5);
-            ucGrid1.Name = "ucGrid1";
-            ucGrid1.Size = new Size(1218, 827);
-            ucGrid1.TabIndex = 0;
             // 
             // BtnPrint
             // 
@@ -148,27 +115,45 @@ namespace MainUI
             btnPageDown.TipsText = "1";
             btnPageDown.Click += btnPageDown_Click;
             // 
-            // numericUpDown1
+            // inputNumber
             // 
-            numericUpDown1.Font = new Font("微软雅黑", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 134);
-            numericUpDown1.Location = new Point(389, 934);
-            numericUpDown1.Name = "numericUpDown1";
-            numericUpDown1.Size = new Size(55, 27);
-            numericUpDown1.TabIndex = 402;
-            numericUpDown1.TextAlign = HorizontalAlignment.Center;
-            numericUpDown1.Value = new decimal(new int[] { 5, 0, 0, 0 });
+            inputNumber.Font = new Font("微软雅黑", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 134);
+            inputNumber.Location = new Point(389, 934);
+            inputNumber.Name = "inputNumber";
+            inputNumber.Size = new Size(55, 27);
+            inputNumber.TabIndex = 402;
+            inputNumber.TextAlign = HorizontalAlignment.Center;
+            inputNumber.Value = new decimal(new int[] { 5, 0, 0, 0 });
+            // 
+            // grpReport
+            // 
+            grpReport.BackColor = Color.Transparent;
+            grpReport.FillColor = Color.White;
+            grpReport.FillColor2 = Color.White;
+            grpReport.Font = new Font("宋体", 12F, FontStyle.Regular, GraphicsUnit.Point, 134);
+            grpReport.Location = new Point(18, 50);
+            grpReport.Margin = new Padding(4, 5, 4, 5);
+            grpReport.MinimumSize = new Size(1, 1);
+            grpReport.Name = "grpReport";
+            grpReport.Radius = 10;
+            grpReport.RectColor = Color.White;
+            grpReport.RectDisableColor = Color.White;
+            grpReport.Size = new Size(1225, 867);
+            grpReport.TabIndex = 404;
+            grpReport.Text = null;
+            grpReport.TextAlignment = ContentAlignment.MiddleCenter;
             // 
             // frmDispReport
             // 
             AutoScaleMode = AutoScaleMode.None;
             BackColor = Color.FromArgb(224, 224, 224);
             ClientSize = new Size(1260, 977);
-            Controls.Add(numericUpDown1);
+            Controls.Add(grpReport);
+            Controls.Add(inputNumber);
             Controls.Add(btnPageUp);
             Controls.Add(btnPageDown);
             Controls.Add(BtnClose);
             Controls.Add(BtnPrint);
-            Controls.Add(grpDI);
             Font = new Font("微软雅黑", 9F);
             MaximizeBox = false;
             MinimizeBox = false;
@@ -182,18 +167,16 @@ namespace MainUI
             TopMost = true;
             ZoomScaleRect = new Rectangle(15, 15, 903, 724);
             Load += frmDispReport_Load;
-            grpDI.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)numericUpDown1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)inputNumber).EndInit();
             ResumeLayout(false);
         }
 
         #endregion
-        private Sunny.UI.UIGroupBox grpDI;
         private Sunny.UI.UIButton BtnPrint;
         private Sunny.UI.UIButton BtnClose;
         private Sunny.UI.UIButton btnPageUp;
         private Sunny.UI.UIButton btnPageDown;
-        private System.Windows.Forms.NumericUpDown numericUpDown1;
-        private UcGrid ucGrid1;
+        private System.Windows.Forms.NumericUpDown inputNumber;
+        private UIPanel grpReport;
     }
 }

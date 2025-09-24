@@ -8,6 +8,7 @@ namespace MainUI
     public partial class UcHMI : UserControl
     {
         #region 全局变量
+        private readonly RW.UI.Controls.Report.RWReport rWReport = new();
         private readonly frmMainMenu frm = new();
         public delegate void RunStatusHandler(bool obj);
         public event RunStatusHandler EmergencyStatusChanged;
@@ -18,7 +19,6 @@ namespace MainUI
         public delegate void TestStateHandler(bool isTesting);
         public event TestStateHandler TestStateChanged;
         private readonly string reportPath;
-        private readonly string dslPath;
         private readonly OPCEventRegistration _opcEventRegistration;
         private readonly DSLService _dslService;
         private readonly TestExecutionService _testService;
@@ -32,9 +32,7 @@ namespace MainUI
             InitializeComponent();
             _opcEventRegistration = new OPCEventRegistration(this);
             reportPath = Path.Combine(Application.StartupPath, Constants.ReportsPath);
-            dslPath = Path.Combine(Application.StartupPath, Constants.ProcedurePath);
-            _dslService = new DSLService(dslPath);
-            _reportService = new ReportService(reportPath);
+            _reportService = new ReportService(reportPath, rWReport);
             _testService = new TestExecutionService(_dslService, TableColor);
             _tableService = new TableService(TableItemPoint, _itemPoints);
             _countdownService = new CountdownService(LabTestTime);
@@ -271,12 +269,8 @@ namespace MainUI
                 //// 加载DSL
                 //_dslService.LoadDSL(VarHelper.TestViewModel.ID, paraconfig);
 
-                // 处理报表文件
-                if (!string.IsNullOrEmpty(paraconfig.RptFile))
-                {
-                    ucGrid1.LoadFile(_reportService
-                        .InitializeReportFile(paraconfig));
-                }
+                // 初始化报表
+                InitializeReport(paraconfig.RptFile);
             }
             catch (Exception ex)
             {
@@ -296,6 +290,55 @@ namespace MainUI
             catch (Exception ex)
             {
                 MessageHelper.MessageYes("刷新型号错误：" + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 初始化报表
+        /// </summary>
+        /// <param name="reportFileName">报表文件名</param>
+        private void InitializeReport(string reportFileName)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(reportFileName))
+                    return;
+
+                reportFileName = ReportService.GetDefaultReportPath() + reportFileName;
+
+                // 检查文件是否存在
+                if (!_reportService.FileExists(reportFileName))
+                {
+                    MessageHelper.MessageOK($"报表文件不存在：{reportFileName}", TType.Error);
+                    return;
+                }
+
+                string workingPath = ReportService.GetWorkingReportPath();
+
+                // 如果当前加载的不是这个文件，则重新加载
+                //if (rWReport.Filename != workingPath)
+                {
+                    // 准备报表控件
+                    rWReport.Dock = DockStyle.Fill;
+                    if (!panelReport.Controls.Contains(rWReport))
+                        panelReport.Controls.Add(rWReport);
+
+                    // 关闭Excel进程
+                    SystemHelper.KillProcess("EXCEL");
+                    Thread.Sleep(200);
+
+                    // 复制文件到工作目录
+                    _reportService.CopyReportFile(reportFileName, workingPath);
+
+                    // 初始化报表控件
+                    rWReport.Filename = workingPath;
+                    rWReport.Init();
+                }
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error("报表加载错误：", ex);
+                MessageHelper.MessageOK($"报表加载错误：{ex.Message}", TType.Error);
             }
         }
         #endregion
@@ -428,29 +471,28 @@ namespace MainUI
         #endregion
 
         #region 报表翻页控制
-        private const int DefaultPageSize = 29; // 默认每页显示行数
-        private int currentRowIndex = 0; // 当前行索引
-        private bool isScrollingDown = false; // 是否向下滚动标记
-
         /// <summary>
         /// 向上翻页
         /// </summary>
         private void btnPageUp_Click(object sender, EventArgs e)
         {
-            int pageSize = LabelNumber.Value.ToInt32();
-
-            // 如果之前是向下滚动,需要先回到起始位置
-            if (isScrollingDown)
+            try
             {
-                currentRowIndex -= DefaultPageSize;
-                isScrollingDown = false;
+                int pageSize = Convert.ToInt32(inputNumber.Value);
+                var (currentRows, upEnabled, downEnabled) = _reportService.PageUp(pageSize);
+
+                // 更新按钮状态
+                btnPageUp.Enabled = upEnabled;
+                btnPageDown.Enabled = downEnabled;
+
+                // 显示当前页信息
+                // XX.Text = $"第 {currentRows} 行";
             }
-
-            // 向上翻页,减少行索引
-            currentRowIndex = Math.Max(0, currentRowIndex - pageSize);
-
-            // 执行翻页
-            ucGrid1.PageTurning(currentRowIndex);
+            catch (Exception ex)
+            {
+                MessageHelper.MessageOK($"向上翻页失败：{ex.Message}", TType.Error);
+                NlogHelper.Default.Error("报表向上翻页失败", ex);
+            }
         }
 
         /// <summary>
@@ -458,27 +500,27 @@ namespace MainUI
         /// </summary>
         private void btnPageDown_Click(object sender, EventArgs e)
         {
-            int pageSize = LabelNumber.Value.ToInt32();
-
-            // 如果是首次向下滚动,需要先移动到默认页大小位置
-            if (!isScrollingDown)
+            try
             {
-                currentRowIndex = DefaultPageSize;
-                isScrollingDown = true;
-            }
-            else
-            {
-                // 继续向下翻页,增加行索引
-                currentRowIndex += pageSize;
-            }
+                int pageSize = Convert.ToInt32(inputNumber.Value);
+                var (currentRows, upEnabled, downEnabled) = _reportService.PageDown(pageSize);
 
-            // 执行翻页
-            ucGrid1.PageTurning(currentRowIndex);
+                // 更新按钮状态
+                btnPageUp.Enabled = upEnabled;
+                btnPageDown.Enabled = downEnabled;
+
+                // 显示当前页信息
+                // XX.Text = $"第 {currentRows} 行";
+            }
+            catch (Exception ex)
+            {
+                MessageHelper.MessageOK($"向下翻页失败：{ex.Message}", TType.Error);
+                NlogHelper.Default.Error("报表向下翻页失败", ex);
+            }
         }
         #endregion
 
         #region 报表控件
-        string saveFilePath;
         private void btnSave_Click(object sender, EventArgs e)
         {
             try
@@ -487,21 +529,28 @@ namespace MainUI
 
                 if (!ConfirmSaveReport()) return;  // 提示确认
 
-                saveFilePath = _reportService.BuildSaveFilePath(VarHelper.TestViewModel.ModelName); // 保存路径
+                string saveFilePath = ReportService.BuildSaveFilePath(VarHelper.TestViewModel.ModelName); // 保存路径
 
-                _reportService.SaveTestRecord(saveFilePath, new TestRecordModel
+                // 保存测试记录
+                var testRecord = new TestRecordModel
                 {
                     KindID = VarHelper.TestViewModel.ModelTypeID,
                     ModelID = VarHelper.TestViewModel.ID,
-                    TestID = txtNumber.Text,
+                    TestID = txtNumber.Text.Trim(),
                     Tester = NewUsers.NewUserInfo.Username,
                     TestTime = DateTime.Now,
-                    ReportPath = saveFilePath,
-                }); // 保存记录
+                    ReportPath = saveFilePath
+                };
 
-                ucGrid1.SaveAsPdf(saveFilePath, saveFilePath);  // 导出PDF
-
-                MessageHelper.MessageOK("保存成功", TType.Success);
+                if (ReportService.SaveTestRecord(testRecord))
+                {
+                    rWReport.SaveAS(saveFilePath);
+                    MessageHelper.MessageOK("保存成功", TType.Success);
+                }
+                else
+                {
+                    MessageHelper.MessageOK("保存失败", TType.Error);
+                }
             }
             catch (Exception ex)
             {
@@ -534,7 +583,7 @@ namespace MainUI
         {
             try
             {
-                ucGrid1.Print(saveFilePath);
+                rWReport.Print();
             }
             catch (Exception ex)
             {
@@ -553,14 +602,14 @@ namespace MainUI
 
         private void btnTechnology_Click(object sender, EventArgs e)
         {
-            tabs1.SelectedIndex = 0;
+            tabs1.SelectedIndex = 1;
             NavigationButtonStyles.UpdateNavigationButtons
                 (tabs1.SelectedIndex, controls);
         }
 
         private void btnCurve_Click(object sender, EventArgs e)
         {
-            tabs1.SelectedIndex = 1;
+            tabs1.SelectedIndex = 0;
             NavigationButtonStyles.UpdateNavigationButtons
                 (tabs1.SelectedIndex, controls);
         }

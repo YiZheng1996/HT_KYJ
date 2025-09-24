@@ -29,7 +29,10 @@ namespace MainUI.PowerSupplyControl
         {
             // 设置默认值
             if (cmbControlMode.Items.Count > 0) cmbControlMode.SelectedIndex = 1; // 电脑控制
-            if (cmbOutputRange.Items.Count > 0) cmbOutputRange.SelectedIndex = 1; // 低档
+            if (cmbOutputRange.Items.Count > 0) cmbOutputRange.SelectedIndex = 0; // 高档
+
+            numVoltage.Value = (decimal)(OPCHelper.PowerControlGrp[3] / 10.0 * 1.732);
+            numFrequency.Value = (decimal)(OPCHelper.PowerControlGrp[2] / 10.0);
         }
 
         private void SetupTimer()
@@ -69,10 +72,10 @@ namespace MainUI.PowerSupplyControl
             }
 
             // 更新电压显示
-            lblVoltageU.Text = $"U: {OPCHelper.PowerReadGrp[8]:F1}V";
-            lblVoltageV.Text = $"V: {OPCHelper.PowerReadGrp[9]:F1}V";
-            lblVoltageW.Text = $"W: {OPCHelper.PowerReadGrp[10]:F1}V";
-            lbTotalVoltage.Text = $"W: {OPCHelper.PowerReadGrp[11]:F1}A";
+            lblVoltageU.Text = $"U: {OPCHelper.PowerReadGrp[4]:F1}V";
+            lblVoltageV.Text = $"V: {OPCHelper.PowerReadGrp[5]:F1}V";
+            lblVoltageW.Text = $"W: {OPCHelper.PowerReadGrp[6]:F1}V";
+            lbTotalVoltage.Text = $"W: {OPCHelper.PowerReadGrp[7]:F1}A";
 
             // 更新电流显示
             lblCurrentU.Text = $"U: {OPCHelper.PowerReadGrp[0]:F1}A";
@@ -81,16 +84,16 @@ namespace MainUI.PowerSupplyControl
             lbTotalCurrent.Text = $"W: {OPCHelper.PowerReadGrp[3]:F1}A";
 
             // 更新功率显示
-            lblPowerU.Text = $"U: {OPCHelper.PowerReadGrp[12]:F0}W";
-            lblPowerV.Text = $"V: {OPCHelper.PowerReadGrp[13]:F0}W";
-            lblPowerW.Text = $"W: {OPCHelper.PowerReadGrp[14]:F0}W";
-            lblTotalPower.Text = $"总功率: {OPCHelper.PowerReadGrp[15]:F0}W";
+            lblPowerU.Text = $"U: {OPCHelper.PowerReadGrp[12]:F1}KW";
+            lblPowerV.Text = $"V: {OPCHelper.PowerReadGrp[13]:F1}KW";
+            lblPowerW.Text = $"W: {OPCHelper.PowerReadGrp[14]:F1}KW";
+            lblTotalPower.Text = $"总功率: {OPCHelper.PowerReadGrp[15]:F1}KW";
 
             // 更新功率因数显示
-            lblFactorU.Text = $"U: {OPCHelper.PowerReadGrp[24]:F0}W";
-            lblFactorV.Text = $"V: {OPCHelper.PowerReadGrp[25]:F0}W";
-            lblFactorW.Text = $"W: {OPCHelper.PowerReadGrp[26]:F0}W";
-            lbTotalFactor.Text = $"总功率: {OPCHelper.PowerReadGrp[27]:F0}W";
+            //lblFactorU.Text = $"U: {OPCHelper.PowerReadGrp[24]:F1}";
+            //lblFactorV.Text = $"V: {OPCHelper.PowerReadGrp[25]:F1}";
+            //lblFactorW.Text = $"W: {OPCHelper.PowerReadGrp[26]:F1}";
+            lbTotalFactor.Text = $"功率因素: {OPCHelper.PowerReadGrp[27]:F2}";
 
             // 更新频率和状态
             lblFrequency.Text = $"频率: {OPCHelper.PowerReadGrp[28]:F1}HZ";
@@ -185,7 +188,8 @@ namespace MainUI.PowerSupplyControl
             try
             {
                 double voltage = (double)numVoltage.Value;
-                OPCHelper.PowerControlGrp[3] = voltage;
+                // 协议要求输入线电压，默认为相电压输出，转换成线电压需要除以1.732
+                OPCHelper.PowerControlGrp[3] = ((voltage * 10) / 1.732);
             }
             catch (Exception ex)
             {
@@ -203,7 +207,7 @@ namespace MainUI.PowerSupplyControl
             try
             {
                 double frequency = (double)numFrequency.Value;
-                OPCHelper.PowerControlGrp[2] = frequency;
+                OPCHelper.PowerControlGrp[2] = (frequency * 10);
             }
             catch (Exception ex)
             {
